@@ -1,0 +1,10 @@
+1. Install PGADMIN
+2. Register SERVER
+3. ssh -i private-subnet-patient-management.pem -f -N -L 5432:database-1.czs486ig6e13.us-west-2.rds.amazonaws.com:5432 ubuntu@35.88.25.113 -v
+
+4. Hostname/Addr =  database-1.czs486ig6e13.us-west-2.rds.amazonaws.com
+   password= no6tMd0ElnaLZDkpP3bd
+   Tunnel host= ec2-35-88-25-113.us-west-2.compute.amazonaws.com
+
+
+
