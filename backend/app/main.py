@@ -1,9 +1,55 @@
+import os
 from fastapi import FastAPI
-app = FastAPI()
+from dotenv import load_dotenv
+from .api.api import api_router 
+from fastapi.middleware.cors import CORSMiddleware
+from app.config.database import database
+from contextlib import asynccontextmanager
+from fastapi.responses import RedirectResponse
+from firebase_admin import credentials, initialize_app, get_app
 
-@app.get("/")
+load_dotenv()
+
+db_pool = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    
+    firebase_key_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY_PATH")
+    if not firebase_key_path:
+        raise ValueError("Environment variable FIREBASE_SERVICE_ACCOUNT_KEY_PATH is not set or is empty.")
+    try:
+        try:
+            get_app()  # Check if already initialized
+        except ValueError:
+            firebase_cred = credentials.Certificate(firebase_key_path)
+            initialize_app(firebase_cred)
+            print("Firebase app initialized successfully")
+    except Exception as e:
+        print(f"Failed to initialize Firebase Admin SDK: {e}")
+        raise ValueError(f"Failed to initialize Firebase Admin SDK: {e}")
+
+    await database.init_pool()  
+    yield
+    await database.close_pool()
+
+app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Or ['*'] to allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
+
+@app.get("/", include_in_schema=False)
 def read_root():
-    return {"message": "Welcome to the Smart IoT Patient Monitoring System Backend"}
+    return RedirectResponse(url="/docs")
+
+app.include_router(api_router)
+
 
 #-- this is for windows machine with vscode editor - run those commands in the terminal
 #python -m venv venv
