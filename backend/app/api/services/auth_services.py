@@ -86,14 +86,6 @@ async def check_user_verification(email: str):
 
 async def save_user_to_db(db: asyncpg.Connection, user_data: dict):
     current_date = datetime.now(timezone.utc).replace(tzinfo=None)
-    """ 
-            "email": user.email,
-            "u_role": user.role, 
-            "phone_number": user.phone_number, 
-            "given_name": user.given_name, 
-            "family_name": user.family_name, 
-            "address": user.address, 
-    """
     try:
         await db.execute('''
             INSERT INTO public."users"(email, u_role, phone_number, given_name, family_name, address, created_at)
