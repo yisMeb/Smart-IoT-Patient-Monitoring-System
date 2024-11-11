@@ -68,7 +68,13 @@ class Database:
             self._tunnel.close()
 
     async def get_connection(self) -> asyncpg.Connection:
-        return await self._pool.acquire()
+        try:
+            return await self._pool.acquire()
+        except Exception as e:
+            logger.error(f"Failed to acquire connection, pool Connection Expired!")
+            logger.error(f"Trying to create new one...")
+            await self.init_pool()  
+            return await self._pool.acquire()
 
 database = Database()
 
