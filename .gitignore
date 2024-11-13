@@ -68,6 +68,7 @@ instance/
 # Scrapy stuff:
 .scrapy
 .pem
+*.pem
 # Sphinx documentation
 docs/_build/
 
@@ -160,3 +161,9 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+*.pem
+/backend
+backend/private-subnet-patient-management.pem
+*.pem
+*.pem
+backend/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json
