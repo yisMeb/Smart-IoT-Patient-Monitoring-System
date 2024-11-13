@@ -1,1 +1,40 @@
+name: Deploy FastAPI to EC2
 
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install SSH Client
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{secrets.SSH_PRIVATE_KEY}}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan ${{secrets.SSH_HOST}} >> ~/.ssh/known_hosts
+
+    - name: Create .env file dynamically
+      run: |
+        echo "${{ secrets.ENV_CONTENT }}" >> env
+    - name: Copy files to remote server
+      env: 
+        EC2_HOST: ${{ secrets.SSH_HOST }}
+        EC2_USERNAME: ${{ secrets.SSH_USER }}
+      run: | 
+          scp -r * "$EC2_USERNAME@$EC2_HOST:/home/ubuntu/"
+    - name: Run bash scripts to deploy the app
+      env: 
+        EC2_HOST: ${{secrets.SSH_HOST}}
+        EC2_USERNAME: ${{ secrets.SSH_USER }}
+      run: |
+       ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_HOST "chmod +x ./deploy.sh && ./deploy.sh"
+    - name: clean up ssh
+      if: always()
+      run: rm -f ~/.ssh/id_rsa
