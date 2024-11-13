@@ -1,32 +1,144 @@
-import { Check, ChevronDown } from 'lucide-react'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Check, Eye, EyeOff } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { PasswordStrengthMeter } from '../../component/public/PasswordStrengthMeter'
+ 
 export default function Signup() {
-  const [accountType, setAccountType] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [showError, setShowError] = useState(false)
+  const [passwordVisible, setPasswordVisible] = useState(false)
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordMatchError, setPasswordMatchError] = useState(false)
+  const [institutionName, setInstitutionName] = useState('')
+  const [address, setAddress] = useState('')
+  const [email, setEmail] = useState('')
+  const [allFieldsFilled, setAllFieldsFilled] = useState(false)
+  const [passwordStrong, setPasswordStrong] = useState(false)
+  const [error, SetError] = useState('')
   
-  const handleSignUp = () => {
+  const navigate = useNavigate();
+
+  const handleSignUp = async () => {
     if (!acceptTerms) {
       setShowError(true)
       return
     }
+    if (password !== confirmPassword) {
+      setPasswordMatchError(true)
+      return
+    }
+    if (!passwordStrong) {
+      return
+    }
     setIsLoading(true)
     
-    setTimeout(() => setIsLoading(false), 2000)
+    try {
+      const response = await fetch(import.meta.env.VITE_API_SIGNUP_INSTITUTE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          name: institutionName,
+          address,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log(data.message);
+        navigate('/login');
+      } else {
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        const errorMessage = data.detail?.message || ' An unknown error occurred.';
+         if (/already exists/.test(errorMessage)) {
+              SetError(' An account with this email already exists. Please use a different email.');
+          } else if (/Failed to add user/.test(errorMessage)) {
+              SetError(' We encountered an issue adding your user information. Please try again.');
+          } else if (/Role creation failed/.test(errorMessage)) {
+              SetError(' There was a problem assigning your role. Please contact support.');
+          } else if (/validation/.test(errorMessage)) {
+              SetError(' Please check your input data and try again.');
+          } else if (/Firebase/.test(errorMessage)) {
+              SetError(' There was an issue with authentication. Please try again.');
+          } else { 
+              SetError(` Registration failed: ${errorMessage}`);
+          }
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message.includes('network')) {
+            SetError(' Network error: Please check your internet connection.');
+        } else if (error.message.includes('Firebase')) {
+            SetError(' There was an issue with Firebase. Please try again later.');
+        } else {
+            SetError(' An unexpected error occurred. Please try again.');
+        }
+      } else {
+          SetError(' An unknown error occurred. Please try again.');
+      }
+    } finally {
+        setIsLoading(false);
+    }
   }
 
-  const handleAccountTypeChange = (type: string) => {
-    setAccountType(type)
-    setIsDropdownOpen(false)
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value)
+    setPasswordMatchError(false)
+    checkAllFieldsFilled()
   }
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmPassword(e.target.value)
+    setPasswordMatchError(false)
+    checkAllFieldsFilled()
+  }
+
+  const checkPasswordStrength = (password: string): boolean => {
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-={};':"\\|,.<>?]/.test(password); // Removed unnecessary escape character
+    const hasNoSpaceOrTab = !/[ \t]/.test(password);
+    const isLongEnough = password.length >= 8;
+    
+    return hasUppercase && hasLowercase && hasNumber && hasSpecialChar && hasNoSpaceOrTab && isLongEnough;
+  };
+
+  useEffect(() => {
+    setPasswordStrong(checkPasswordStrength(password))
+  }, [password])
+
+  const checkAllFieldsFilled = () => {
+    const isValidEmail = (email: string): boolean => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    };
+
+    const allFilled = 
+      institutionName.trim() !== '' &&
+      address.trim() !== '' &&
+      email.trim() !== '' && isValidEmail(email) &&
+      password.trim() !== '' &&
+      confirmPassword.trim() !== '' &&
+      acceptTerms &&
+      passwordStrong
+    setAllFieldsFilled(allFilled)
+  }
+
+  useEffect(() => {
+    checkAllFieldsFilled()
+  }, [institutionName, address, email, password, confirmPassword, acceptTerms, passwordStrong])
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Side - Progress */}
       <div className="hidden w-[400px] bg-[#0066FF] p-12 flex-col justify-between lg:flex">
         <div className="space-y-16 relative">
           <div className="flex items-start space-x-4 relative">
@@ -77,71 +189,105 @@ export default function Signup() {
         </div>
       </div>
 
-      {/* Right Side - Form */}
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-[440px] space-y-6">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-semibold tracking-tight">Sign up for an account</h1>
-            <p className="text-gray-500">Your social campaigns</p>
+            <h1 className="text-3xl font-semibold tracking-tight">Register for an account</h1>
           </div>
-
-          <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            <img src="/google.png" alt="Google" className="h-5 w-5" />
-            Sign in with Google
-          </button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-gray-500">Or with email</span>
-            </div>
-          </div>
-
+          {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                  <strong className="font-bold">Error!</strong>
+                  <span className="block sm:inline">{error}</span>
+              </div>
+          )}
           <div className="space-y-4">
+            <div>
+              <input
+                type="text"
+                placeholder="Institution Name"
+                value={institutionName}
+                onChange={(e) => {
+                  setInstitutionName(e.target.value)
+                  checkAllFieldsFilled()
+                }}
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
+              />
+            </div>
+            <div>
+              <input
+                type="text"
+                placeholder="Address"
+                value={address}
+                onChange={(e) => {
+                  setAddress(e.target.value)
+                  checkAllFieldsFilled()
+                }}
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
+              />
+            </div>
             <div>
               <input
                 type="email"
                 placeholder="Email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  checkAllFieldsFilled()
+                }}
+                required
                 className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
               />
             </div>
-            
-            <div>
-              <input
-                type="password"
-                placeholder="Password"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
-              />
+            <div className="space-y-2">
+              <div className="relative">
+                <input
+                  type={passwordVisible ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={handlePasswordChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  {passwordVisible ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+              <PasswordStrengthMeter password={password} />
             </div>
-
             <div className="relative">
+              <input
+                type={confirmPasswordVisible ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
+              />
               <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex w-full items-center justify-between rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-500"
+                type="button"
+                onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
               >
-                {accountType || 'Account type'}
-                <ChevronDown className="h-4 w-4" />
+                {confirmPasswordVisible ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
               </button>
-              {isDropdownOpen && (
-                <div className="absolute mt-1 w-full rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                  <button
-                    onClick={() => handleAccountTypeChange('Healthcare Professional')}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    Healthcare Professional
-                  </button>
-                  <button
-                    onClick={() => handleAccountTypeChange('Healthcare Provider')}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    Healthcare Provider
-                  </button>
-                </div>
-              )}
             </div>
-
+            {passwordMatchError && (
+              <p className="text-red-500 text-sm">Passwords do not match.</p>
+            )}
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2">
                 <input 
@@ -151,6 +297,7 @@ export default function Signup() {
                   onChange={(e) => {
                     setAcceptTerms(e.target.checked)
                     setShowError(false)
+                    checkAllFieldsFilled()
                   }}
                 />
                 <span className="text-gray-600">
@@ -170,7 +317,7 @@ export default function Signup() {
 
             <button 
               onClick={handleSignUp}
-              disabled={isLoading}
+              disabled={isLoading || !allFieldsFilled}
               className="w-full rounded-lg bg-[#0066FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0066FF]/90 disabled:opacity-50"
             >
               {isLoading ? (
@@ -183,7 +330,7 @@ export default function Signup() {
 
             <p className="text-center text-sm text-gray-500">
               Already have an Account?{' '}
-              <Link to="/signin" className="text-[#0066FF]">
+              <Link to="/login" className="text-[#0066FF]">
                 Sign in
               </Link>
             </p>

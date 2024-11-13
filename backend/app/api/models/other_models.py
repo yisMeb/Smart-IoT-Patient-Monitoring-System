@@ -6,15 +6,10 @@ def validate_input(user_data: dict):
     email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     if not re.match(email_regex, user_data['email']):
         raise HTTPException(status_code=400, detail="Invalid email format.")
-    
     if not user_data.get('address'):
         raise HTTPException(status_code=400, detail="Address cannot be empty.")
-    if not user_data.get('family_name'):
-            raise HTTPException(status_code=400, detail="family name cannot be empty.")
-    if not user_data.get('given_name'):
+    if not user_data.get('name'):
             raise HTTPException(status_code=400, detail="given name cannot be empty.")
-    if not user_data.get('u_role'):
-                raise HTTPException(status_code=400, detail="Role cannot be empty.")
 
 def validate_phone_number(phone_number: str) -> str:
     try:
