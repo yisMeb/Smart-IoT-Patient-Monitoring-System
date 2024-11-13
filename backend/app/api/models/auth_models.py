@@ -2,14 +2,10 @@ from datetime import date
 from pydantic import BaseModel
 from typing import Optional
 
-class UserSignup(BaseModel):
+class InstituteSignup(BaseModel):
     email: str
     password: str
-    created_at: date
-    role: str
-    phone_number: str
-    given_name: str
-    family_name: str
+    name: str
     address: str
 
 class UserLogin(BaseModel):
@@ -35,17 +31,22 @@ class CreateUser(BaseModel): # for admins
 
 class UserBase(BaseModel):
     email: str
+    password: str
     phone_number: str
     given_name: str
     family_name: str
-    address: str
-    role: str
     created_at: date
+    address: Optional[str] 
+    role: str
 
 class FetchUser(UserBase):
-    group_name: str
+    user_id: str
     email:str
     created_at: date
+    role_id: str
+    institution_id: Optional[str]
+    professional_id: Optional[str]
+    patient_id: Optional[str]
 
     class Config:
         from_attributes = True
