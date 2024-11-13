@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
         raise ValueError("Environment variable FIREBASE_SERVICE_ACCOUNT_KEY_PATH is not set or is empty.")
     try:
         try:
-            get_app()  # Check if already initialized
+            get_app()  
         except ValueError:
             firebase_cred = credentials.Certificate(firebase_key_path)
             initialize_app(firebase_cred)
@@ -37,10 +37,10 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Or ['*'] to allow all origins
+    allow_origins=["http://localhost:5173"], 
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
