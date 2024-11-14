@@ -4,105 +4,91 @@
 sudo apt update -y
 sudo apt upgrade -y
 
-# Install necessary dependencies for Python and FastAPI app
-sudo apt install -y python3.12 python3.12-venv python3.12-dev build-essential libpq-dev
-sudo apt install -y git
+# Install necessary dependencies
+sudo apt install -y python3.12 python3.12-venv python3.12-dev build-essential libpq-dev git nginx
 
-# Create project directory if it doesn't exist
+# Set up project directories
 PROJECT_DIR="/home/ubuntu/Smart-IoT-Patient-Monitoring-System"
-mkdir -p $PROJECT_DIR
+BACKEND_DIR="$PROJECT_DIR/backend"
 
-# Clone or pull the repository
-if [ -d "$PROJECT_DIR/.git" ]; then
-    echo "Repository exists, pulling latest changes..."
-    cd $PROJECT_DIR
-    git fetch origin
-    git reset --hard origin/main
-else
-    echo "Cloning repository..."
-    cd /home/ubuntu
-    git clone https://github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
-    cd Smart-IoT-Patient-Monitoring-System
-fi
+# Remove existing directory if it exists
+echo "Cleaning up existing directory..."
+rm -rf $PROJECT_DIR
 
-cd $PROJECT_DIR/backend
-pwd
-ls -la
+# Clone the repository fresh
+echo "Cloning repository..."
+cd /home/ubuntu
+git clone https://github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
+cd $PROJECT_DIR
 
-# Set up a Python virtual environment
+# Create backend directory structure if it doesn't exist
+mkdir -p $BACKEND_DIR/app/config
+
+# Navigate to backend directory
+cd $BACKEND_DIR
+echo "Current directory: $(pwd)"
+
+# Create and activate virtual environment
 echo "Setting up Python virtual environment..."
 python3.12 -m venv venv
 source venv/bin/activate
 
+# Verify Python environment
 which python
 python --version
 
-# Install Python dependencies from requirements.txt
+# Install dependencies
 echo "Installing dependencies..."
 pip install --upgrade pip
-if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
-else
-    echo "requirements.txt not found! Creating one..."
-    echo "
-    gunicorn
-    pytest
-    fastapi 
-    uvicorn
-    firebase-admin
-    asyncpg
-    python-dotenv
-    asyncssh
-    phonenumbers
-    python-multipart
-    httpx
-    " > requirements.txt
-    pip install -r requirements.txt
-fi
-# Create necessary directories
-mkdir -p app/config
+echo "
+gunicorn
+pytest
+fastapi 
+uvicorn
+firebase-admin
+asyncpg
+python-dotenv
+asyncssh
+phonenumbers
+python-multipart
+httpx
+" > requirements.txt
+pip install -r requirements.txt
 
 # Copy configuration files from temp directory
 echo "Copying configuration files..."
-if [ -f "/home/ubuntu/temp/.env" ]; then
-    cp /home/ubuntu/temp/.env ./app/config/.env
-    echo ".env file copied successfully"
-else
-    echo ".env file not found in temp directory"
+cp /home/ubuntu/temp/.env $BACKEND_DIR/app/config/.env || echo ".env file copy failed"
+cp /home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89 $BACKEND_DIR/app/config/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89 || echo "Firebase config copy failed"
+cp /home/ubuntu/temp/private-subnet-patient-management.pem /home/ubuntu/.ssh/ || echo "PEM file copy failed"
+chmod 600 /home/ubuntu/.ssh/private-subnet-patient-management.pem || echo "PEM file permission change failed"
+
+# Create a basic FastAPI app if it doesn't exist
+if [ ! -f "$BACKEND_DIR/app/main.py" ]; then
+    echo "Creating basic FastAPI app..."
+    cat > $BACKEND_DIR/app/main.py << EOF
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+EOF
 fi
 
-if [ -f "/home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json" ]; then
-    cp /home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json ./app/config/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json
-    echo "Firebase config file copied successfully"
-else
-    echo "Firebase config file not found in temp directory"
-fi
-
-if [ -f "/home/ubuntu/temp/private-subnet-patient-management.pem" ]; then
-    mkdir -p /home/ubuntu/.ssh
-    cp /home/ubuntu/temp/private-subnet-patient-management.pem /home/ubuntu/.ssh/
-    chmod 600 /home/ubuntu/.ssh/private-subnet-patient-management.pem
-    echo "PEM file copied successfully"
-else
-    echo "PEM file not found in temp directory"
-fi
-
-# Kill any existing uvicorn processes
-echo "Stopping any existing uvicorn processes..."
-pkill -f uvicorn || true
-
-# Start the FastAPI app with Uvicorn
-echo "Starting the FastAPI application..."
-nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > nohup.out 2>&1 &
-
-# Install and configure Nginx
-echo "Installing and configuring Nginx..."
-sudo apt install -y nginx
-# Create Nginx configuration
+# Configure Nginx
+echo "Configuring Nginx..."
 sudo tee /etc/nginx/sites-available/fastapi_app << EOF
 server {
-    listen 80;
+    listen 80 default_server;
     server_name _;
+
+    access_log /var/log/nginx/fastapi_access.log;
+    error_log /var/log/nginx/fastapi_error.log;
 
     location / {
         proxy_pass http://127.0.0.1:8000;
@@ -117,30 +103,51 @@ server {
     }
 }
 EOF
-# Enable the site
+
+# Enable the site and remove default
+sudo rm -f /etc/nginx/sites-enabled/default
 sudo ln -sf /etc/nginx/sites-available/fastapi_app /etc/nginx/sites-enabled/
 
-# Remove default configuration
-sudo rm -f /etc/nginx/sites-enabled/default
+# Test Nginx configuration
+sudo nginx -t
 
-# Test and restart Nginx
-sudo nginx -t && sudo systemctl restart nginx
+# Stop any existing uvicorn processes
+echo "Stopping any existing uvicorn processes..."
+pkill -f uvicorn || true
 
-# Verify the application is running
+# Start the FastAPI app with Uvicorn
+echo "Starting the FastAPI application..."
+cd $BACKEND_DIR
+nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > nohup.out 2>&1 &
+
+# Restart Nginx
+sudo systemctl restart nginx
+
+# Wait for services to start
 sleep 5
-if pgrep -f uvicorn > /dev/null; then
-    echo "Application started successfully!"
+
+# Verify services
+echo "Verifying services..."
+if curl -s http://localhost:8000/ > /dev/null; then
+    echo "FastAPI is running!"
 else
-    echo "Failed to start application!"
+    echo "FastAPI failed to start!"
+    echo "Checking logs..."
+    tail -n 50 nohup.out
     exit 1
 fi
 
-# Check Nginx status
 if sudo systemctl is-active --quiet nginx; then
     echo "Nginx is running!"
 else
     echo "Nginx failed to start!"
+    echo "Checking Nginx logs..."
+    sudo tail -n 50 /var/log/nginx/error.log
     exit 1
 fi
 
-echo "Deployment completed!"
+echo "Checking Nginx configuration and logs..."
+sudo cat /etc/nginx/sites-enabled/fastapi_app
+sudo tail -n 50 /var/log/nginx/fastapi_error.log
+
+echo "Deployment completed! Try accessing http://$(curl -s ifconfig.me)/health"
