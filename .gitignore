@@ -162,8 +162,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 *.pem
-/backend
-backend/private-subnet-patient-management.pem
 *.pem
 *.pem
-backend/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json
