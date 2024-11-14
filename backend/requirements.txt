@@ -1,4 +1,5 @@
 gunicorn
+pytest
 fastapi 
 uvicorn
 firebase-admin

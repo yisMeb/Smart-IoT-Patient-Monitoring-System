@@ -34,7 +34,7 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
 
       - name: Run Tests   
-        run: . venv/bin/activate
+        run: . venv/bin/activate && pytest
 
       - name: Create archive of dependencies
         run: |
@@ -45,9 +45,7 @@ jobs:
         run: cd ./api && zip -g ../api.zip -r .
 
       - name: Upload zip file artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3 
         with:
           name: api
           path: api.zip
-
-  
