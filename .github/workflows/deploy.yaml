@@ -28,7 +28,7 @@ jobs:
         EC2_HOST: ${{ secrets.SSH_HOST }}
         EC2_USERNAME: ${{ secrets.SSH_USER }}
       run: | 
-          scp -r * "$EC2_USERNAME@$EC2_HOST:/home/ubuntu/"
+          scp -r backend/* "$EC2_USERNAME@$EC2_HOST:/home/ubuntu/"
     - name: Run bash scripts to deploy the app
       env: 
         EC2_HOST: ${{secrets.SSH_HOST}}

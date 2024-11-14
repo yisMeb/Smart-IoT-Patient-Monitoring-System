@@ -12,7 +12,7 @@ sudo mv env .env
 
 sudo apt-get update
 echo "install python and pip"
-sudo apt-get install -r requirements.txt
+sudo pip3 install -r requirements.txt
 
 if ! command -v nginx > /dev/null; then
     echo "installing Nginx"
@@ -47,5 +47,5 @@ sudo rm -rf myapp.sock
 
 
 echo "starting gunicorn"
-sudo gunicorn --workers 3 --bind unix:myapp.sock app.main:app --user www-data  --group www-data --daemon
+sudo gunicorn --workers 3 --bind unix:myapp.sock backend.app.main:app --user www-data  --group www-data --daemon
 echo "started gunicorn"
