@@ -30,8 +30,8 @@ if [ -f "/home/ubuntu/temp/.env" ]; then
     cp /home/ubuntu/temp/.env ./app/config/.env
 fi
 
-if [ -f "/home/ubuntu/temp/secret.pem.firebase.json" ]; then
-    cp /home/ubuntu/temp/secret.pem.firebase.json ./app/config/secret.pem.firebase.json
+if [ -f "/home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json" ]; then
+    cp /home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json ./app/config/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json
 fi
 
 if [ -f "/home/ubuntu/temp/private-subnet-patient-management.pem" ]; then

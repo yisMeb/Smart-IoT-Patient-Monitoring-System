@@ -38,7 +38,7 @@ jobs:
       run: |
         scp -o StrictHostKeyChecking=no \
           backend/.env \
-          backend/secret.pem.firebase.json \
+          backend/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json \
           backend/private-subnet-patient-management.pem \
           ubuntu@${{ secrets.SSH_HOST }}:/home/ubuntu/temp/
 
