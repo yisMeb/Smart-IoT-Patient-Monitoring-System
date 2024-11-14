@@ -10,13 +10,15 @@ sudo apt install -y python3.12 python3.12-venv python3.12-dev build-essential li
 # Define project directories
 PROJECT_DIR="/home/ubuntu/Smart-IoT-Patient-Monitoring-System"
 BACKEND_DIR="$PROJECT_DIR/backend"
-
+USERNAME=yismeb
+TOKEN=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
+REPO=https://github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
 # Navigate to the project directory
 cd $PROJECT_DIR || { echo "Project directory not found"; exit 1; }
 
 # Pull the latest changes from the repository
 echo "Pulling latest changes from the repository..."
-git pull origin main
+git pull https://$USERNAME:$TOKEN@github.com/$REPO
 
 # Ensure backend configuration directories exist
 mkdir -p $BACKEND_DIR/app/config
