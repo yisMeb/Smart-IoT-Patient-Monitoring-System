@@ -37,7 +37,7 @@ jobs:
         run: ls -R
     
       - name: Run Tests   
-        run: . venv/bin/activate && pytest /backend/tests
+        run: . venv/bin/activate && pytest
 
       - name: Create archive of dependencies
         run: |
