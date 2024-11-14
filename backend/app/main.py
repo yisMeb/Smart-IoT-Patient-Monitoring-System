@@ -46,7 +46,7 @@ app.add_middleware(
 
 @app.get("/", include_in_schema=False)
 def read_root():
-    return RedirectResponse(url="/docs")
+    return RedirectResponse(url="/docs", status_code=307)
 
 app.include_router(api_router)
 
