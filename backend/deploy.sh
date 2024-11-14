@@ -1,30 +1,30 @@
-echo "delete old app"
-sudo rm -rf /var/www/
+echo "Deleting old app"
+sudo rm -rf /var/www/smart-iot-patient-monitoring-system
 
-echo "creating app folder"
+echo "Creating app folder"
 sudo mkdir -p /var/www/smart-iot-patient-monitoring-system
 
-echo "moving files to app folder"
-sudo mv * /var/www/smart-iot-patient-monitoring-system
+echo "Moving files to app folder"
+sudo cp -r * /var/www/smart-iot-patient-monitoring-system
 
-cd /var/www/smart-iot-patient-monitoring-system/
+cd /var/www/smart-iot-patient-monitoring-system
 sudo mv env .env
 
 sudo apt-get update
 
-echo "install python and pip"
+echo "Installing Python, pip, and virtual environment tools"
 sudo apt-get install -y python3-pip python3-venv
 
-echo "Setting up virtual environment"
-python3 -m venv venv
-source venv/bin/activate
+echo "Setting up virtual environment in the home directory"
 
-echo "Installing dependencies"
-sudo pip3 install -r requirements.txt
+python3 -m venv ~/smart-iot-venv
+source ~/smart-iot-venv/bin/activate
+
+echo "Installing dependencies in the virtual environment"
+pip install -r requirements.txt
 
 if ! command -v nginx > /dev/null; then
-    echo "installing Nginx"
-    sudo apt-get update
+    echo "Installing Nginx"
     sudo apt-get install -y nginx
 fi
 
@@ -39,8 +39,7 @@ server {
         include proxy_params;
         proxy_pass http://unix:/var/www/smart-iot-patient-monitoring-system/myapp.sock;
     }
-}   
-
+}
 EOF'
 
     sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled
@@ -49,11 +48,9 @@ else
     echo "Nginx reverse proxy configuration already exists."
 fi
 
-
 sudo pkill gunicorn || true
-sudo rm -rf myapp.sock
+sudo rm -f /var/www/smart-iot-patient-monitoring-system/myapp.sock
 
-
-echo "starting gunicorn"
-./venv/bin/gunicorn --workers 3 --bind unix:myapp.sock backend.main:app --user www-data --group www-data --daemon
-echo "started gunicorn"
+echo "Starting Gunicorn"
+~/smart-iot-venv/bin/gunicorn --workers 3 --bind unix:/var/www/smart-iot-patient-monitoring-system/myapp.sock backend.main:app --user www-data --group www-data --daemon
+echo "Gunicorn started"
