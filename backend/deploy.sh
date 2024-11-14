@@ -11,7 +11,15 @@ cd /var/www/smart-iot-patient-monitoring-system/
 sudo mv env .env
 
 sudo apt-get update
+
 echo "install python and pip"
+sudo apt-get install -y python3-pip python3-venv
+
+echo "Setting up virtual environment"
+python3 -m venv venv
+source venv/bin/activate
+
+echo "Installing dependencies"
 sudo pip3 install -r requirements.txt
 
 if ! command -v nginx > /dev/null; then
@@ -42,10 +50,10 @@ else
 fi
 
 
-sudo pkill gunicorn
+sudo pkill gunicorn || true
 sudo rm -rf myapp.sock
 
 
 echo "starting gunicorn"
-sudo gunicorn --workers 3 --bind unix:myapp.sock backend.app.main:app --user www-data  --group www-data --daemon
+./venv/bin/gunicorn --workers 3 --bind unix:myapp.sock backend.main:app --user www-data --group www-data --daemon
 echo "started gunicorn"
