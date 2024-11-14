@@ -13,10 +13,22 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Create .env file
+      run: |
+        echo "${{ secrets.ENV_FILE_CONTENT }}" > backend/.env
+
+    - name: Create firebase config file
+      run: |
+        echo "${{ secrets.FIREBASE_CONFIG }}" > backend/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json
+
+    - name: Create PEM file
+      run: |
+        echo "${{ secrets.PEM_FILE_CONTENT }}" > backend/private-subnet-patient-management.pem
+
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.5.3
       with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        ssh-private-key: ${{ secrets.PEM_FILE_CONTENT }}
 
     - name: Create temporary directory on EC2
       run: |
@@ -35,5 +47,6 @@ jobs:
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} 'bash -s' < backend/deploy.sh
 
     - name: Clean up temporary files
+      if: always()
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} 'rm -rf /home/ubuntu/temp'
