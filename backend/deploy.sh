@@ -95,12 +95,51 @@ pkill -f uvicorn || true
 echo "Starting the FastAPI application..."
 nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > nohup.out 2>&1 &
 
+# Install and configure Nginx
+echo "Installing and configuring Nginx..."
+sudo apt install -y nginx
+# Create Nginx configuration
+sudo tee /etc/nginx/sites-available/fastapi_app << EOF
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+EOF
+# Enable the site
+sudo ln -sf /etc/nginx/sites-available/fastapi_app /etc/nginx/sites-enabled/
+
+# Remove default configuration
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# Test and restart Nginx
+sudo nginx -t && sudo systemctl restart nginx
+
 # Verify the application is running
 sleep 5
 if pgrep -f uvicorn > /dev/null; then
     echo "Application started successfully!"
 else
     echo "Failed to start application!"
+    exit 1
+fi
+
+# Check Nginx status
+if sudo systemctl is-active --quiet nginx; then
+    echo "Nginx is running!"
+else
+    echo "Nginx failed to start!"
     exit 1
 fi
 
