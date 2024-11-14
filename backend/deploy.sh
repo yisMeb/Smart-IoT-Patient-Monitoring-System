@@ -1,4 +1,6 @@
+#!/bin/bash
 
+# Update system packages
 sudo apt update -y
 sudo apt upgrade -y
 
@@ -6,8 +8,14 @@ sudo apt upgrade -y
 sudo apt install -y python3.12 python3.12-venv python3.12-dev build-essential libpq-dev
 sudo apt install -y git
 
-# Navigate to your backend app directory
-cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend
+# Navigate to the project root directory
+cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System
+
+# Pull latest changes from git repository
+git pull origin main
+
+# Navigate to backend directory
+cd backend
 
 # Set up a Python virtual environment
 python3.12 -m venv venv
@@ -17,14 +25,23 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-cp /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/.env /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/.env
-cp /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json
+# Copy configuration files
+if [ -f "/home/ubuntu/temp/.env" ]; then
+    cp /home/ubuntu/temp/.env ./app/config/.env
+fi
 
-# Copy the .pem file for SSH connection to the jump server
-cp /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/private-subnet-patient-management.pem /home/ubuntu/.ssh/private-subnet-patient-management.pem
+if [ -f "/home/ubuntu/temp/secret.pem.firebase.json" ]; then
+    cp /home/ubuntu/temp/secret.pem.firebase.json ./app/config/secret.pem.firebase.json
+fi
 
-# Set the proper permissions for the .pem file
-chmod 600 /home/ubuntu/.ssh/private-subnet-patient-management.pem
+if [ -f "/home/ubuntu/temp/private-subnet-patient-management.pem" ]; then
+    mkdir -p /home/ubuntu/.ssh
+    cp /home/ubuntu/temp/private-subnet-patient-management.pem /home/ubuntu/.ssh/
+    chmod 600 /home/ubuntu/.ssh/private-subnet-patient-management.pem
+fi
 
-# Run the FastAPI app with Uvicorn
-nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
+# Kill any existing uvicorn processes
+pkill -f uvicorn || true
+
+# Start the FastAPI app with Uvicorn
+nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > nohup.out 2>&1 &
