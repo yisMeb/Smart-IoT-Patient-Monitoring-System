@@ -34,10 +34,10 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
 
       - name: List files in tests directory
-        run: ls backend/tests
+        run: ls /backend/tests
 
       - name: Run Tests   
-        run: . venv/bin/activate && pytest backend/tests
+        run: . venv/bin/activate && pytest /backend/tests
 
       - name: Create archive of dependencies
         run: |
