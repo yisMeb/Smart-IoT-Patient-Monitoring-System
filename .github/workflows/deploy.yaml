@@ -32,10 +32,7 @@ jobs:
       - name: Activate Virtual ENV
         run: python -m venv venv && source venv/bin/activate && pip3 install -r backend/requirements.txt
         if: steps.cache-venv.outputs.cache-hit != 'true'
-
-      - name: List files in root directory
-        run: ls -R
-    
+        
       - name: Run Tests   
         run: . venv/bin/activate && pytest
 
@@ -45,7 +42,7 @@ jobs:
           zip -r9 ../../../../api.zip .
       
       - name: Add API files to Zip file
-        run: cd /backend/app/api && zip -g ../../../api.zip -r .
+        run: cd ./backend/app/api && zip -g ../../../api.zip -r .
 
       - name: Upload zip file artifact
         uses: actions/upload-artifact@v3 
