@@ -58,7 +58,7 @@ pip install -r requirements.txt
 # Copy configuration files from temp directory
 echo "Copying configuration files..."
 cp /home/ubuntu/temp/.env $BACKEND_DIR/app/config/.env || echo ".env file copy failed"
-cp /home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89 $BACKEND_DIR/app/config/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89 || echo "Firebase config copy failed"
+cp /home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json $BACKEND_DIR/app/config/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json || echo "Firebase config copy failed"
 cp /home/ubuntu/temp/private-subnet-patient-management.pem /home/ubuntu/.ssh/ || echo "PEM file copy failed"
 chmod 600 /home/ubuntu/.ssh/private-subnet-patient-management.pem || echo "PEM file permission change failed"
 
