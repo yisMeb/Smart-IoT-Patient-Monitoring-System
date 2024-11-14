@@ -59,9 +59,11 @@ if [ ! -f /etc/nginx/sites-available/fastapi_app ]; then
     sudo tee /etc/nginx/sites-available/fastapi_app << EOF
 server {
     listen 443 ssl;
-    server_name _;
+    server_name 35.88.25.113;
+
     ssl_certificate /etc/nginx/ssl/selfsigned.crt;
     ssl_certificate_key /etc/nginx/ssl/selfsigned.key;
+    
     access_log /var/log/nginx/fastapi_access.log;
     error_log /var/log/nginx/fastapi_error.log;
 
