@@ -41,7 +41,12 @@ jobs:
           backend/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json \
           backend/private-subnet-patient-management.pem \
           ubuntu@${{ secrets.SSH_HOST }}:/home/ubuntu/temp/
-
+    - name: Configure Git on EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} '
+            git config --global credential.helper store
+            echo "https://${{ secrets.TOKEN_GITHUB }}@github.com" > ~/.git-credentials
+        '
     - name: Pull latest changes on EC2
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} '
