@@ -21,14 +21,10 @@ echo "Activating virtual environment"
 source venv/bin/activate
 
 # Move the env file to .env
-sudo mv env .env
+mv env .env
 
-# Update package list
 sudo apt-get update
-
-# Install Python and pip if not already installed
-echo "Installing Python and pip"
-sudo apt-get install -y python3 python3-pip
+sudo apt-get install -y libpq-dev 
 
 # Install application dependencies from requirements.txt
 echo "Installing application dependencies from requirements.txt"
