@@ -8,3 +8,4 @@ python-dotenv
 asyncssh
 phonenumbers
 python-multipart
+httpx
