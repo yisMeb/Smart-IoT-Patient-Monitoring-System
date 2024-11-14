@@ -108,7 +108,7 @@ pkill -f uvicorn || true
 # Start the FastAPI app with Uvicorn
 echo "Starting the FastAPI application..."
 cd $BACKEND_DIR
-nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > nohup.out 2>&1 &
+nohup uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 > nohup.out 2>&1 &
 
 # Restart Nginx
 sudo systemctl restart nginx
