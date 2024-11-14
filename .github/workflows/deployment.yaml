@@ -1,0 +1,31 @@
+name: Deploy FastAPI app to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY}}
+
+    - name: Copy .pem, .env, and firebase.json to EC2
+      run: |
+        scp -i ${{ secrets.SSH_PRIVATE_KEY }} .env iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json private-subnet-patient-management.pem ubuntu@${{ secrets.SSH_HOST }}:/home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/
+
+    - name: Run deployment script on EC2
+      run: |
+        ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ubuntu@${{ secrets.SSH_HOST }} 'bash -s' < deploy.sh
+
+    - name: Clean up
+      run: |
+        ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ubuntu@${{ secrets.SSH_HOST }} 'rm /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/.env /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json'
