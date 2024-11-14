@@ -25,7 +25,8 @@ class Database:
                 ssh_host,
                 port=ssh_port,
                 username=ssh_user,
-                client_keys=[ssh_key_path]
+                client_keys=[ssh_key_path],
+                known_hosts=None
             )
             
             # Local port for the forwarded connection
