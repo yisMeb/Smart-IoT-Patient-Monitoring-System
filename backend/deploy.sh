@@ -8,7 +8,7 @@ echo "Moving files to app folder"
 sudo cp -r * /var/www/smart-iot-patient-monitoring-system
 
 cd /var/www/smart-iot-patient-monitoring-system
-sudo mv env .env
+#sudo mv ./backend/env .env
 
 sudo apt-get update
 

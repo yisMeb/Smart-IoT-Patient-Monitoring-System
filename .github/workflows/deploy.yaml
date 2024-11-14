@@ -22,7 +22,7 @@ jobs:
 
     - name: Create .env file dynamically
       run: |
-        echo "${{ secrets.ENV_CONTENT }}" >> env
+        echo "${{ secrets.ENV_CONTENT }}" > /var/www/smart-iot-patient-monitoring-system/.env
     - name: Copy files to remote server
       env: 
         EC2_HOST: ${{ secrets.SSH_HOST }}
