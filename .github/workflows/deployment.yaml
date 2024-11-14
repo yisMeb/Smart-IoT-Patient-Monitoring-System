@@ -42,12 +42,11 @@ jobs:
           backend/private-subnet-patient-management.pem \
           ubuntu@${{ secrets.SSH_HOST }}:/home/ubuntu/temp/
 
-    - name: Configure Git on EC2
+    - name: Pull latest changes on EC2
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} '
-          git config --global credential.helper store
-          echo "https://${{ secrets.TOKEN_GITHUB }}@github.com" > ~/.git-credentials
-          echo "here is github token ${{secrets.TOKEN_GITHUB}}"
+            cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System &&
+            git pull origin main
         '
 
     - name: Deploy application
