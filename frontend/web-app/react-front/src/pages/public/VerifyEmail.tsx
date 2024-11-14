@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { auth } from "../../lib/firebaseConfig";
 import { sendEmailVerification } from "firebase/auth";
 import { Link, useLocation } from "react-router-dom";
@@ -31,9 +30,13 @@ const VerifyEmail = () => {
         setMessage("No user is currently signed in.");
         setResendStatus('error');
       }
-    } catch (error: any) {
-      setMessage("Error sending verification email: " + error.message);
-      setResendStatus('error');
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+          setMessage("Error sending verification email: " + error.message);
+        } else {
+            setMessage("An unknown error occurred.");
+        }
+        setResendStatus('error');
     }
     setIsResending(false);
     setTimeout(() => setResendStatus('idle'), 5000)
