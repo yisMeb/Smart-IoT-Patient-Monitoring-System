@@ -1,51 +1,47 @@
-name: FastAPI CI/CD
+name: Deploy to EC2 🚀
 
 on:
   push:
-    branches: 
-      - main 
+    branches:
+      - "main" 
 
 jobs:
-
-  CI:
+  deploy:
     runs-on: ubuntu-latest
-    steps:   
-      - uses: actions/checkout@v2
-      
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.12.4
+    steps:
+      - name: Checkout current branch ✅
+        uses: actions/checkout@v2
 
-      - name: Install Python Virtual ENV
-        run: pip3 install virtualenv
-
-      - name: Virtual ENV
-        uses: actions/cache@v2
-        id: cache-venv 
-        with:
-          path: venv 
-          key: ${{ runner.os }}-venv-${{ hashFiles('backend/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-venv-
-
-      - name: Activate Virtual ENV
-        run: python -m venv venv && source venv/bin/activate && pip3 install -r backend/requirements.txt
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        
-      - name: Run Tests   
-        run: . venv/bin/activate && pytest
-
-      - name: Create archive of dependencies
+      - name: Set up SSH key and whitelist EC2 IP address 🐻‍❄️
         run: |
-          cd ./venv/lib/python3.12/site-packages
-          zip -r9 ../../../../api.zip .
-      
-      - name: Add API files to Zip file
-        run: cd ./backend/app/api && zip -g ../../../api.zip -r .
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan ${{ secrets.SSH_HOST}} >> ~/.ssh/known_hosts
 
-      - name: Upload zip file artifact
-        uses: actions/upload-artifact@v3 
-        with:
-          name: api
-          path: api.zip
+      - name: Create .env file dynamically 🧨
+        env:
+          ENV: ${{ secrets.ENV_CONTENT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "ENV=${ENV}" >> env
+          echo "SSH_USER=${SSH_USER}" >> env
+          echo "OPENAI_API_KEY=${OPENAI_API_KEY}" >> env
+
+      - name: Copy files to remote server 🚙
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          scp -r * $SSH_USER@$SSH_HOST:/home/ubuntu/
+
+      - name: Run Bash Script To Delpoy App 🚀
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "chmod +x ./backend/deploy.sh && ./backend/deploy.sh"
+
+      - name: Clean up SSH key 🚀
+        if: always()
+        run: rm -f ~/.ssh/id_rsa
