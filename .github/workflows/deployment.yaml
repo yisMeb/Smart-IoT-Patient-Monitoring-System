@@ -46,7 +46,7 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} '
             cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System &&
-            git pull origin main
+            git pull https://yismeb:${{ secrets.TOKEN_GITHUB }}@github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
         '
 
     - name: Deploy application

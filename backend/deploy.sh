@@ -12,13 +12,14 @@ PROJECT_DIR="/home/ubuntu/Smart-IoT-Patient-Monitoring-System"
 BACKEND_DIR="$PROJECT_DIR/backend"
 USERNAME=yismeb
 TOKEN=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
-REPO=https://github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
+REPO=yisMeb/Smart-IoT-Patient-Monitoring-System
+
 # Navigate to the project directory
 cd $PROJECT_DIR || { echo "Project directory not found"; exit 1; }
 
 # Pull the latest changes from the repository
 echo "Pulling latest changes from the repository..."
-git pull https://$USERNAME:$TOKEN@github.com/$REPO
+git pull https://$USERNAME:$TOKEN@github.com/$REPO.git
 
 # Ensure backend configuration directories exist
 mkdir -p $BACKEND_DIR/app/config
