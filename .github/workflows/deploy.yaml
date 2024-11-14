@@ -1,40 +1,53 @@
-name: Deploy FastAPI to EC2
+name: FastAPI CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: 
+      - main 
 
 jobs:
-  deploy:
+
+  CI:
     runs-on: ubuntu-latest
+    steps:   
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12.4
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Install Python Virtual ENV
+        run: pip3 install virtualenv
 
-    - name: Install SSH Client
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{secrets.SSH_PRIVATE_KEY}}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan ${{secrets.SSH_HOST}} >> ~/.ssh/known_hosts
+      - name: Virtual ENV
+        uses: actions/cache@v2
+        id: cache-venv 
+        with:
+          path: venv 
+          key: ${{ runner.os }}-venv-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
 
-    - name: Create .env file dynamically
-      run: |
-        echo "${{ secrets.ENV_CONTENT }}" > /var/www/smart-iot-patient-monitoring-system/.env
-    - name: Copy files to remote server
-      env: 
-        EC2_HOST: ${{ secrets.SSH_HOST }}
-        EC2_USERNAME: ${{ secrets.SSH_USER }}
-      run: | 
-          scp -r backend/* "$EC2_USERNAME@$EC2_HOST:/home/ubuntu/"
-    - name: Run bash scripts to deploy the app
-      env: 
-        EC2_HOST: ${{secrets.SSH_HOST}}
-        EC2_USERNAME: ${{ secrets.SSH_USER }}
-      run: |
-        ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_HOST "chmod +x ./deploy.sh && ./deploy.sh"
-    - name: clean up ssh
-      if: always()
-      run: rm -f ~/.ssh/id_rsa
+      - name: Activate Virtual ENV
+        run: python -m venv venv && source venv/bin/activate && pip3 install -r backend/requirements.txt
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+
+      - name: Run Tests   
+        run: . venv/bin/activate
+
+      - name: Create archive of dependencies
+        run: |
+          cd ./venv/lib/python3.12/site-packages
+          zip -r9 ../../../../api.zip .
+      
+      - name: Add API files to Zip file
+        run: cd ./api && zip -g ../api.zip -r .
+
+      - name: Upload zip file artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: api
+          path: api.zip
+
+  
