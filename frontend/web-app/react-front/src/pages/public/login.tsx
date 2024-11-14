@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import { Check, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -75,7 +74,7 @@ export default function Login() {
     checkAllFieldsFilled()
   }, [email, password, acceptTerms])
 
-  const handleLogin = async (e: any) => {
+  const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsLoading(true);
     if (!isValidEmail(email)) {
