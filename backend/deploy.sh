@@ -23,7 +23,7 @@ source venv/bin/activate
 
 # Install Python dependencies from requirements.txt
 pip install --upgrade pip
-pip install -r /backend/requirements.txt
+pip install -r ./backend/requirements.txt
 
 # Copy configuration files
 if [ -f "/home/ubuntu/temp/.env" ]; then
