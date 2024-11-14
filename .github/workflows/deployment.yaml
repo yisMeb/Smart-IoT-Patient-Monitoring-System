@@ -42,6 +42,13 @@ jobs:
           backend/private-subnet-patient-management.pem \
           ubuntu@${{ secrets.SSH_HOST }}:/home/ubuntu/temp/
 
+    - name: Configure Git on EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} '
+          git config --global credential.helper store
+          echo "https://${{ secrets.TOKEN_GITHUB }}@github.com" > ~/.git-credentials
+        '
+
     - name: Deploy application
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} 'bash -s' < backend/deploy.sh
@@ -49,4 +56,7 @@ jobs:
     - name: Clean up temporary files
       if: always()
       run: |
-        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} 'rm -rf /home/ubuntu/temp'
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} '
+          rm -rf /home/ubuntu/temp
+          rm -f ~/.git-credentials
+        '

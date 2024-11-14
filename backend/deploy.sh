@@ -8,11 +8,19 @@ sudo apt upgrade -y
 sudo apt install -y python3.12 python3.12-venv python3.12-dev build-essential libpq-dev
 sudo apt install -y git
 
-# Navigate to the project root directory
-cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System
+# Create project directory if it doesn't exist
+mkdir -p /home/ubuntu/Smart-IoT-Patient-Monitoring-System
 
-# Pull latest changes from git repository
-git pull origin main
+# Clone or pull the repository
+if [ -d "/home/ubuntu/Smart-IoT-Patient-Monitoring-System/.git" ]; then
+    cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System
+    git pull origin main
+else
+    cd /home/ubuntu
+    # Replace with your actual repository URL
+    git clone https://github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
+    cd Smart-IoT-Patient-Monitoring-System
+fi
 
 # Navigate to backend directory
 cd backend
@@ -23,9 +31,12 @@ source venv/bin/activate
 
 # Install Python dependencies from requirements.txt
 pip install --upgrade pip
-pip install -r ./backend/requirements.txt
+pip install -r requirements.txt
 
-# Copy configuration files
+# Create necessary directories
+mkdir -p app/config
+
+# Copy configuration files from temp directory
 if [ -f "/home/ubuntu/temp/.env" ]; then
     cp /home/ubuntu/temp/.env ./app/config/.env
 fi
