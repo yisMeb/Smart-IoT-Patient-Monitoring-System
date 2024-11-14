@@ -33,9 +33,9 @@ jobs:
         run: python -m venv venv && source venv/bin/activate && pip3 install -r backend/requirements.txt
         if: steps.cache-venv.outputs.cache-hit != 'true'
 
-      - name: List files in tests directory
-        run: ls /backend/tests
-
+      - name: List files in root directory
+        run: ls -R
+    
       - name: Run Tests   
         run: . venv/bin/activate && pytest /backend/tests
 
