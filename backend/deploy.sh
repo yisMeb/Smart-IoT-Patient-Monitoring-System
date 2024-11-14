@@ -62,23 +62,6 @@ cp /home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f
 cp /home/ubuntu/temp/private-subnet-patient-management.pem /home/ubuntu/.ssh/ || echo "PEM file copy failed"
 chmod 600 /home/ubuntu/.ssh/private-subnet-patient-management.pem || echo "PEM file permission change failed"
 
-# Create a basic FastAPI app if it doesn't exist
-if [ ! -f "$BACKEND_DIR/app/main.py" ]; then
-    echo "Creating basic FastAPI app..."
-    cat > $BACKEND_DIR/app/main.py << EOF
-from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.get("/health")
-async def health():
-    return {"status": "healthy"}
-EOF
-fi
 
 # Configure Nginx
 echo "Configuring Nginx..."
