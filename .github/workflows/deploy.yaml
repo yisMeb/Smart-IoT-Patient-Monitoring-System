@@ -34,7 +34,7 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
 
       - name: Run Tests   
-        run: . venv/bin/activate && pytest
+        run: . venv/bin/activate && pytest backend/
 
       - name: Create archive of dependencies
         run: |
