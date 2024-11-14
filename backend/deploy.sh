@@ -58,9 +58,10 @@ if [ ! -f /etc/nginx/sites-available/fastapi_app ]; then
     echo "Configuring Nginx..."
     sudo tee /etc/nginx/sites-available/fastapi_app << EOF
 server {
-    listen 80 default_server;
+    listen 443 ssl;
     server_name _;
-
+    ssl_certificate /etc/nginx/ssl/selfsigned.crt;
+    ssl_certificate_key /etc/nginx/ssl/selfsigned.key;
     access_log /var/log/nginx/fastapi_access.log;
     error_log /var/log/nginx/fastapi_error.log;
 
