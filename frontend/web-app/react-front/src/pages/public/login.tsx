@@ -22,8 +22,8 @@ export default function Login() {
     const handleAuthState = async () => {
       const role = getRoleFromCookies();
       const idToken = getIdTokenFromCookies();
-
       if (!role || !idToken || isTokenExpired(idToken)){
+            console.log('ID: ', idToken," ROLE: ", role)
             auth.signOut();
             return;
       }
@@ -33,6 +33,10 @@ export default function Login() {
           try {
             const response = await fetch(`${import.meta.env.VITE_API_GET_USER_DATA}/${user.email}`, {
               method: "GET",
+              headers: {
+                'Authorization': `Bearer ${idToken}`,
+                'Content-Type': 'application/json'
+              }
             });
             const data = await response.json();
             const user_role = data.user_role;
@@ -77,22 +81,22 @@ export default function Login() {
   const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage("");
     if (!isValidEmail(email)) {
         setErrorMessage('Please enter a valid email address.')
+        setIsLoading(false);
         return
       }
       try {
-        const response = await fetch(import.meta.env.VITE_API_SIGNUP_LOGIN, {
+        const response = await fetch(import.meta.env.VITE_API_LOGIN, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ email, password }),
         });
-        const data = await response.json();
-        setIsLoading(false);
-        
         if (!response.ok) {
+          setIsLoading(false);
           if (response.status === 401) {
             setErrorMessage("Incorrect email or password.");
           } else if (response.status === 500) {
@@ -102,45 +106,48 @@ export default function Login() {
             setErrorMessage(data.message || "Failed to log in. Please try again.");
           }
         } else {
-            
+
+          const data = await response.json();
           const customToken = data.custom_token;
           await signInWithCustomToken(auth, customToken);
+
           const currentUser = auth.currentUser;
           if(currentUser){
             const idToken = await currentUser.getIdToken();
-            
             const { user_id, user_role } = data.user_data;
-            setIdTokenCookie(idToken, user_role);
             const verificationStatus = data.verification_status;
+              console.log("USER ROLE FROM BACK: ", user_role)
+              setIdTokenCookie(idToken, user_role);
               setRole(user_role); 
               setIsAuthenticated(true);
               setRoleName(user_role)
+
             if (verificationStatus) {
+              
               if (role === "institution") {
                 navigate("/institutes");
-              } else if (role === "professionals") {
+              }else if (role === "professionals") {
                 navigate("/professionals");
+              }else if(role === "admin"){
+                navigate("/admin");
               }
             } else {
-              if (currentUser) {
                 await sendEmailVerification(currentUser);
-              } else {
-                setErrorMessage("No current user found to send verification email.");
-              }
-              navigate("/verify-email", { state: { email, user_id } });
+                navigate("/verify-email", { state: { email, user_id } });
             }
           }else{
             setErrorMessage("User is not signed in.");
           }
         }
       } catch (error) {
-        setIsLoading(false);
         if (error instanceof TypeError) {
             setErrorMessage("Network error. Please check your connection and try again.");
         } else {
             setErrorMessage("An unexpected error occurred. Please try again later.");
         }
         console.log(error);
+      }finally {
+        setIsLoading(false);
       }
   }; 
 

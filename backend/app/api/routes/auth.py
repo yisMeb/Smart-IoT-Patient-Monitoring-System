@@ -27,9 +27,6 @@ async def login_endpoint(user: UserLogin, db = Depends(get_db_conn)):
 
 @router.get("/fecthUser/{email}")
 async def fetch_User(email: str, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
-    if current_user['user_role'] != 'admin':
-        raise HTTPException(status_code=403, detail="You do not have permission to perform this action")
-    
     user_data = await fetch_user_by_email(email, db)
     if user_data["institution_id"] is not None:
         user_role = "institution"
