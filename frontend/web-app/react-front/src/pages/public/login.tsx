@@ -37,6 +37,9 @@ export default function Login() {
                 'Content-Type': 'application/json' 
               }
             });
+            if (!response.ok) {
+              console.log(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
             const user_role = data.user_role;
 
