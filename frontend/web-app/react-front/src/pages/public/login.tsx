@@ -23,7 +23,6 @@ export default function Login() {
       const role = getRoleFromCookies();
       const idToken = getIdTokenFromCookies();
       if (!role || !idToken || isTokenExpired(idToken)){
-            console.log('ID: ', idToken," ROLE: ", role)
             auth.signOut();
             return;
       }
@@ -35,7 +34,7 @@ export default function Login() {
               method: "GET",
               headers: {
                 'Authorization': `Bearer ${idToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json' 
               }
             });
             const data = await response.json();
@@ -86,70 +85,69 @@ export default function Login() {
         setErrorMessage('Please enter a valid email address.')
         setIsLoading(false);
         return
-      }
-      try {
+    }
+    try {
         const response = await fetch(import.meta.env.VITE_API_LOGIN, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
         });
         if (!response.ok) {
-          setIsLoading(false);
-          if (response.status === 401) {
-            setErrorMessage("Incorrect email or password.");
-          } else if (response.status === 500) {
-            setErrorMessage("Server error. Please try again later.");
-          } else {
-            const data = await response.json();
-            setErrorMessage(data.message || "Failed to log in. Please try again.");
-          }
-        } else {
-
-          const data = await response.json();
-          const customToken = data.custom_token;
-          await signInWithCustomToken(auth, customToken);
-
-          const currentUser = auth.currentUser;
-          if(currentUser){
-            const idToken = await currentUser.getIdToken();
-            const { user_id, user_role } = data.user_data;
-            const verificationStatus = data.verification_status;
-              console.log("USER ROLE FROM BACK: ", user_role)
-              setIdTokenCookie(idToken, user_role);
-              setRole(user_role); 
-              setIsAuthenticated(true);
-              setRoleName(user_role)
-
-            if (verificationStatus) {
-              
-              if (role === "institution") {
-                navigate("/institutes");
-              }else if (role === "professionals") {
-                navigate("/professionals");
-              }else if(role === "admin"){
-                navigate("/admin");
-              }
+            setIsLoading(false);
+            if (response.status === 401) {
+                setErrorMessage("Incorrect email or password.");
+            } else if (response.status === 500) {
+                setErrorMessage("Server error. Please try again later.");
             } else {
-                await sendEmailVerification(currentUser);
-                navigate("/verify-email", { state: { email, user_id } });
+                const data = await response.json();
+                setErrorMessage(data.message || "Failed to log in. Please try again.");
             }
-          }else{
-            setErrorMessage("User is not signed in.");
-          }
+        } else {
+            const data = await response.json();
+            const customToken = data.custom_token;
+            await signInWithCustomToken(auth, customToken);
+
+            const currentUser = auth.currentUser;
+            if(currentUser){
+                const idToken = await currentUser.getIdToken();
+                const { user_id, user_role } = data.user_data;
+                const verificationStatus = data.verification_status;
+                
+                setIdTokenCookie(idToken, user_role);
+                setIsAuthenticated(true);
+                setRoleName(user_role);
+
+                if (!verificationStatus) {
+                    await sendEmailVerification(currentUser);
+                    navigate("/verify-email", { state: { email, user_id } });
+                } else {
+                    if (user_role === "institution") {
+                        navigate("/institutes");
+                    } else if (user_role === "professionals") {
+                        navigate("/professionals");
+                    } else if(user_role === "admin") {
+                        navigate("/admin");
+                    }
+                }
+                setRole(user_role);
+                console.log(role)
+            } else {
+                setErrorMessage("User is not signed in.");
+            }
         }
-      } catch (error) {
+    } catch (error) {
         if (error instanceof TypeError) {
             setErrorMessage("Network error. Please check your connection and try again.");
         } else {
             setErrorMessage("An unexpected error occurred. Please try again later.");
         }
         console.log(error);
-      }finally {
+    } finally {
         setIsLoading(false);
-      }
-  }; 
+    }
+};
 
   return (
     <div className="flex min-h-screen">
