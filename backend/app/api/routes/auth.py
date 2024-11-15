@@ -4,6 +4,7 @@ from firebase_admin import auth
 from app.api.models.auth_models import FetchUser, InstituteSignup, UserLogin
 from app.api.services.auth_services import fetch_user_by_email, login, signupInstitute
 from app.config.database import get_db_conn
+from app.api.dependacies import get_current_user
 
 
 router = APIRouter()
@@ -25,7 +26,10 @@ async def login_endpoint(user: UserLogin, db = Depends(get_db_conn)):
 
 
 @router.get("/fecthUser/{email}")
-async def fetch_User(email: str, db = Depends(get_db_conn)):
+async def fetch_User(email: str, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
+    if current_user['user_role'] != 'admin':
+        raise HTTPException(status_code=403, detail="You do not have permission to perform this action")
+    
     user_data = await fetch_user_by_email(email, db)
     if user_data["institution_id"] is not None:
         user_role = "institution"
@@ -39,5 +43,3 @@ async def fetch_User(email: str, db = Depends(get_db_conn)):
         "user_data": user_data,
         "user_role": user_role
     }
-        
-    

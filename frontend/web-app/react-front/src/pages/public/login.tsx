@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback  } from 'react'
 import { Check, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { sendEmailVerification, signInWithCustomToken } from 'firebase/auth'
@@ -62,17 +62,17 @@ export default function Login() {
     return emailRegex.test(email)
   }
 
-  const checkAllFieldsFilled = () => {
+  const checkAllFieldsFilled = useCallback(() => {
     setAllFieldsFilled(
       isValidEmail(email) &&
       password.trim() !== '' &&
       acceptTerms
-    )
-  }
+    );
+  }, [email, password, acceptTerms]);  
 
   useEffect(() => {
-    checkAllFieldsFilled()
-  }, [email, password, acceptTerms])
+    checkAllFieldsFilled();
+  }, [checkAllFieldsFilled]);
 
   const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -142,7 +142,6 @@ export default function Login() {
         }
         console.log(error);
       }
-    
   }; 
 
   return (

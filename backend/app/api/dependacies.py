@@ -15,7 +15,6 @@ firebase_key_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY_PATH")
 
 if not firebase_key_path:
     raise ValueError("Environment variable FIREBASE_SERVICE_ACCOUNT_KEY_PATH is not set or is empty.")
-# Initialize Firebase app if not already initialized
 try:
     try:
         app = get_app()
@@ -32,9 +31,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db:  asyncpg.Connection = Depends(get_db_conn)):
-    """Extract and verify current user from Firebase JWT token."""
     try:
-        # Verify token with Firebase Admin SDK
         decoded_token = auth.verify_id_token(token)
         email = decoded_token.get("email")
         
@@ -44,8 +41,21 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:  asyncpg.Con
         user = await db.fetchrow('SELECT * FROM public."users" WHERE email = $1', email)
         if not user:
             raise HTTPException(status_code=404, detail="User not found.")
+        if user["institution_id"] is not None:
+            user_role = "institution"
+        elif user["professional_id"] is not None:
+            user_role = "professional"
+        elif user["patient_id"] is not None:
+            user_role = "patient"
+        elif user["admin_id"] is not None:
+            user_role = "admin"
+        else:
+            raise HTTPException(status_code=400, detail="User role not identified.")
         
-        return user
+        return{
+            "user_data": user,
+            "user_role": user_role
+        }
     
     except auth.ExpiredIdTokenError:
         raise HTTPException(status_code=401, detail="Token has expired.")
