@@ -36,7 +36,6 @@ export default function Login() {
                 'Authorization': `Bearer ${idToken}`,
                 'Content-Type': 'application/json' 
               },
-              credentials: 'include',
               mode: 'cors'
             });
             if (!response.ok) {
