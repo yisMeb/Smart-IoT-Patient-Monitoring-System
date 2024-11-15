@@ -35,7 +35,9 @@ export default function Login() {
               headers: {
                 'Authorization': `Bearer ${idToken}`,
                 'Content-Type': 'application/json' 
-              }
+              },
+              credentials: 'include',
+              mode: 'cors'
             });
             if (!response.ok) {
               console.log(`HTTP error! status: ${response.status}`);
