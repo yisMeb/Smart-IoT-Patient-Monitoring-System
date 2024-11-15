@@ -88,7 +88,7 @@ async def get_db_conn() -> AsyncGenerator[asyncpg.Connection, None]:
         yield db_conn
     except Exception as e:
         logger.error(f"Error in get_db_conn: {e}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+        raise HTTPException(status_code=500, detail=f"{e}")
     finally:
         if db_conn:
             await database._pool.release(db_conn)
