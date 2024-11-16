@@ -1,7 +1,7 @@
 import asyncpg
 from datetime import datetime
 
-from backend.app.api.models.inst_models import InstitutionCreate, InstitutionUpdate
+from app.api.models.inst_models import InstitutionCreate, InstitutionUpdate
 
 async def create_institution_service(institution: InstitutionCreate, db: asyncpg.Connection):
     query = """

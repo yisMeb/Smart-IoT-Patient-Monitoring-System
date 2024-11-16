@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 import asyncpg
-from datetime import datetime
-
-from backend.app.api.models.inst_models import InstitutionCreate, InstitutionUpdate
-from backend.app.api.services.institute_services import create_institution_service, delete_institution_service, read_institution_service, update_institution_service
-from backend.app.config.database import get_db_conn
+from app.api.models.inst_models import InstitutionCreate, InstitutionUpdate
+from app.api.services.institute_services import create_institution_service, delete_institution_service, read_institution_service, update_institution_service
+from app.config.database import get_db_conn
 
 
 router = APIRouter()
