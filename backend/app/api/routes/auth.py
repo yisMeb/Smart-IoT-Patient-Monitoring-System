@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from firebase_admin import auth
-
-from app.api.models.auth_models import FetchUser, InstituteSignup, UserLogin
+from app.api.models.auth_models import InstituteSignup, UserLogin
 from app.api.services.auth_services import fetch_user_by_email, login, signupInstitute
 from app.config.database import get_db_conn
 from app.api.dependacies import get_current_user

@@ -55,7 +55,6 @@ def read_root():
 
 app.include_router(api_router)
 
-
 #-- this is for windows machine with vscode editor - run those commands in the terminal
 #python -m venv venv
 #venv\Scripts\activate
