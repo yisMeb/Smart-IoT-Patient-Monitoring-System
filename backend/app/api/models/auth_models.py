@@ -11,7 +11,6 @@ class InstituteSignup(BaseModel):
 class UserLogin(BaseModel):
     email: str  
     password: str
-    
 
 class EditUser(BaseModel):
     phone_number: str
