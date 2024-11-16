@@ -33,10 +33,13 @@ export default function Login() {
             const response = await fetch(`${import.meta.env.VITE_API_GET_USER_DATA}/${user.email}`, {
               method: "GET",
               headers: {
-                'Authorization': `Bearer ${idToken}`,
-                'Content-Type': 'application/json' 
-              }
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+              },
             });
+            if (!response.ok) {
+              console.log(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
             const user_role = data.user_role;
 
