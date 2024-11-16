@@ -1,0 +1,11 @@
+gunicorn
+pytest
+fastapi 
+uvicorn
+firebase-admin
+asyncpg
+python-dotenv
+asyncssh
+phonenumbers
+python-multipart
+httpx
