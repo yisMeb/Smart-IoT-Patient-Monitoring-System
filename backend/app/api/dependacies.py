@@ -2,7 +2,6 @@ import os
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from firebase_admin import auth, initialize_app, credentials, get_app
-import firebase_admin
 from app.config.database import get_db_conn
 from dotenv import load_dotenv
 import asyncpg 

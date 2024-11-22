@@ -5,10 +5,7 @@ from app.config.database import database
 from contextlib import asynccontextmanager
 from fastapi.responses import RedirectResponse
 from firebase_admin import credentials, initialize_app, get_app
-from app.api.models.inst_models import InstitutionCreate , InstitutionUpdate
-from datetime import date , datetime
-from fastapi import FastAPI,Depends,HTTPException
-import asyncpg 
+from fastapi import FastAPI
 import os
 load_dotenv()
 
