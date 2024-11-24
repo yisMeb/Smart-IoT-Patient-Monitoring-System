@@ -33,3 +33,4 @@ async def fetch_professionals(
         return await get_healthcare_professionals(db)
     else :
         raise HTTPException(status_code=401, detail="Only admin can access this feature")
+

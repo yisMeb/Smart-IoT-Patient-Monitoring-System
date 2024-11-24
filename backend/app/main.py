@@ -5,10 +5,7 @@ from app.config.database import database
 from contextlib import asynccontextmanager
 from fastapi.responses import RedirectResponse
 from firebase_admin import credentials, initialize_app, get_app
-from app.api.models.inst_models import InstitutionCreate , InstitutionUpdate
-from datetime import date , datetime
-from fastapi import FastAPI,Depends,HTTPException
-import asyncpg 
+from fastapi import FastAPI
 import os
 load_dotenv()
 
@@ -54,7 +51,6 @@ def read_root():
     return RedirectResponse(url="/docs", status_code=307)
 
 app.include_router(api_router)
-
 
 #-- this is for windows machine with vscode editor - run those commands in the terminal
 #python -m venv venv

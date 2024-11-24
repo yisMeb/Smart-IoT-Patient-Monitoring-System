@@ -70,3 +70,4 @@ async def get_healthcare_professionals(db: asyncpg.Connection):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+

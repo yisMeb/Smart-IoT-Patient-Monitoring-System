@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 import logging
-import uuid
 import asyncpg
 from fastapi import HTTPException
 from app.api.models.auth_models import InstituteSignup, UserLogin
