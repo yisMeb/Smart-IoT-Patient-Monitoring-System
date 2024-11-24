@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from app.api.services.healthcare_professional_services import (
     add_healthcare_professional,
     get_healthcare_professionals,
@@ -14,10 +14,13 @@ router = APIRouter()
 @router.post("/add")
 async def add_professional(
     professional: CreateHealthcareProfessional,
+    current_user: dict = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db_conn),
 ):
-    print("API ADD")
-    return await add_healthcare_professional(professional, db)
+    if current_user["user_role"] == "admin":
+        return await add_healthcare_professional(professional, db)
+    else :
+        raise HTTPException(status_code=401, detail="Only admin can access this feature")
 
 
 # GET route to fetch all healthcare professionals
@@ -26,5 +29,7 @@ async def fetch_professionals(
     current_user: dict = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db_conn),
 ):
-    # Allow all authenticated users to view healthcare professionals
-    return await get_healthcare_professionals(db)
+    if current_user["user_role"] == "admin":
+        return await get_healthcare_professionals(db)
+    else :
+        raise HTTPException(status_code=401, detail="Only admin can access this feature")
