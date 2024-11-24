@@ -4,7 +4,7 @@ from app.api.services.healthcare_professional_services import (
     get_healthcare_professionals,
 )
 from app.api.models.healthcare_professional_models import CreateHealthcareProfessional
-from app.api.dependacies import admin_required, get_current_user
+from app.api.dependacies import  get_current_user
 from app.config.database import get_db_conn
 import asyncpg
 
