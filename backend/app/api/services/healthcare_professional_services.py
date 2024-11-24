@@ -5,12 +5,8 @@ from app.api.models.healthcare_professional_models import CreateHealthcareProfes
 from datetime import datetime, timezone
 
 
-async def add_healthcare_professional(
-    professional: CreateHealthcareProfessional, db: asyncpg.Connection
-):
+async def add_healthcare_professional(professional: CreateHealthcareProfessional, db: asyncpg.Connection):
     try:
-        # Check if institution_id exists in the institution table
-
         institution_exists = await db.fetchval(
     '''
     SELECT 1 FROM public."institutions" WHERE institution_id = $1

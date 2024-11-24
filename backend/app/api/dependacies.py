@@ -2,7 +2,6 @@ import os
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from firebase_admin import auth, initialize_app, credentials, get_app
-import firebase_admin
 from app.config.database import get_db_conn
 from dotenv import load_dotenv
 import asyncpg 
@@ -47,8 +46,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:  asyncpg.Con
             user_role = "professional"
         elif user["patient_id"] is not None:
             user_role = "patient"
-        elif user["admin_id"] is not None:
-            user_role = "admin"
         else:
             raise HTTPException(status_code=400, detail="User role not identified.")
         

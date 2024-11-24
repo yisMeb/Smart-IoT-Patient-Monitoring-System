@@ -17,20 +17,19 @@ async def add_professional(
     current_user: dict = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db_conn),
 ):
-    if current_user["user_role"] == "admin":
+    if current_user["user_role"] == "institution":
         return await add_healthcare_professional(professional, db)
     else :
         raise HTTPException(status_code=401, detail="Only admin can access this feature")
 
 
 # GET route to fetch all healthcare professionals
-@router.get("/")
+@router.get("/fetch")
 async def fetch_professionals(
     current_user: dict = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db_conn),
 ):
-    if current_user["user_role"] == "admin":
+    if current_user["user_role"] == "institution":
         return await get_healthcare_professionals(db)
     else :
         raise HTTPException(status_code=401, detail="Only admin can access this feature")
-
