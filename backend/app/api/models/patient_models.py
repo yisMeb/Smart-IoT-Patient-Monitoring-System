@@ -1,0 +1,21 @@
+from datetime import date
+from pydantic import BaseModel
+from typing import Optional
+
+class PatientCreate(BaseModel):
+    institution_id: str
+    name: str
+    dob: date
+    contact_number: Optional[str]
+    email: str
+    address: Optional[str]  
+    class Config:
+        from_attributes = True
+
+class PatientUpdate(BaseModel):
+    name: str
+    dob: date
+    contact_number: str
+    email: str
+    address: str
+
