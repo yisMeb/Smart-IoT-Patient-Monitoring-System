@@ -30,7 +30,7 @@ class Database:
             )
             
             # Local port for the forwarded connection
-            local_forward_port = 5433
+            local_forward_port = 5438
 
             # Start port forwarding: forwarding local port to RDS host through SSH tunnel
             self._forward = await self._tunnel.forward_local_port(
