@@ -42,13 +42,14 @@ jobs:
           backend/private-subnet-patient-management.pem \
           ubuntu@${{ secrets.SSH_HOST }}:/home/ubuntu/temp/
 
-    - name: Pull latest changes on EC2
+    - name: Replace code on EC2 with the main branch
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} '
-          cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System &&
-          git reset --hard HEAD &&  # Discard local changes
-          git clean -fd &&          # Remove untracked files
-          git pull https://yismeb:${{ secrets.TOKEN_GITHUB }}@github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
+          # Remove the existing codebase
+          rm -rf /home/ubuntu/Smart-IoT-Patient-Monitoring-System &&
+          
+          # Clone a fresh copy of the repository
+          git clone https://yismeb:${{ secrets.TOKEN_GITHUB }}@github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git /home/ubuntu/Smart-IoT-Patient-Monitoring-System
         '
 
 
