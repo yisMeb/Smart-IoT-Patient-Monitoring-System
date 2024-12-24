@@ -9,3 +9,4 @@ asyncssh
 phonenumbers
 python-multipart
 httpx
+pydantic[email]
