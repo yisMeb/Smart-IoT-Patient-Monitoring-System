@@ -45,10 +45,12 @@ jobs:
     - name: Pull latest changes on EC2
       run: |
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} '
-            cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System &&
-            git config pull.rebase false &&  # Avoid rebase; use merge instead
-            git pull https://yismeb:${{ secrets.TOKEN_GITHUB }}@github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
+          cd /home/ubuntu/Smart-IoT-Patient-Monitoring-System &&
+          git reset --hard HEAD &&  # Discard local changes
+          git clean -fd &&          # Remove untracked files
+          git pull https://yismeb:${{ secrets.TOKEN_GITHUB }}@github.com/yisMeb/Smart-IoT-Patient-Monitoring-System.git
         '
+
 
     - name: Deploy application
       run: |
