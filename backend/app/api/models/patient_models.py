@@ -1,4 +1,5 @@
 from datetime import date
+from uuid import UUID
 from pydantic import BaseModel
 from typing import Optional
 
@@ -9,6 +10,7 @@ class PatientCreate(BaseModel):
     contact_number: Optional[str]
     email: str
     address: Optional[str]  
+    device_id: UUID
     class Config:
         from_attributes = True
 

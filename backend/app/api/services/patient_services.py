@@ -1,33 +1,63 @@
-from xml.dom import ValidationErr
 import asyncpg
 from datetime import datetime, timezone
-import logging
-import uuid
+
 from fastapi import HTTPException
+from pydantic import ValidationError
 from app.api.models.patient_models import PatientCreate, PatientUpdate
-from app.api.models.other_models import validate_input
-from firebase_admin import auth
-
-
-
+from app.api.models.other_models import validate_input, validate_phone_number
 
 async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection):
-    current_date = datetime.now(timezone.utc).replace(tzinfo=None)
-    query = """
-    INSERT INTO patients (institution_id, name, dob, contact_number, email, address, created_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-    RETURNING patient_id, institution_id
-    """
-    patient_data = {
-        "institution_id": patient.institution_id,
-        "name": patient.name,
-        "dob": patient.dob,
-        "contact_number": patient.contact_number,
-        "email": patient.email,
-        "address": patient.address,
-    }
-    validate_input(patient_data)
+    try:
+        current_date = datetime.now(timezone.utc).replace(tzinfo=None)
 
+        # Validate individual fields
+        validate_input({
+            "name": patient.name,
+            "email": patient.email,
+            "address": patient.address
+        })
+        
+        # Validate and format the phone number
+        formatted_phone_number = validate_phone_number(patient.contact_number)
+       
+        query = """
+        INSERT INTO public.patients (institution_id, name, dob, contact_number, email, address, device_id, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING patient_id, institution_id
+        """
+        record = await db.fetchrow(
+            query,
+            patient.institution_id,
+            patient.name,
+            patient.dob,
+            formatted_phone_number,
+            patient.email,
+            patient.address,
+            patient.device_id,
+            current_date
+        )
+
+        if not record:
+            raise HTTPException(status_code=500, detail="Failed to insert patient data")
+
+        #Update the device table
+        update_query = """
+        UPDATE public.device
+        SET is_assigned = TRUE, assigned_to = $1
+        WHERE deviceid = $2
+        """
+        await db.execute(update_query, record["patient_id"], patient.device_id)
+        
+        return {
+            "patient_id": record["patient_id"],
+            "institution_id": record["institution_id"],
+        }
+    
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    
 async def read_patient_service(patient_id: int, db: asyncpg.Connection):
     query = """
     SELECT patient_id, institution_id, name, dob, contact_number, email, address, created_at
