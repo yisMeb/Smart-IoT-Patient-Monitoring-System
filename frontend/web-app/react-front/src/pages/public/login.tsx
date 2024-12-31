@@ -44,9 +44,9 @@ export default function Login() {
             const user_role = data.user_role;
 
             if (user_role === "institution") {
-                navigate("/institutes");
+                navigate("/institutes/h-provider");
              }else if (user_role === "professionals") {
-                navigate("/professionals");
+                navigate("/professionals/dashboard");
              }
           } catch (error) {
             console.error("Error fetching user data: try logging in", error);

@@ -1,0 +1,264 @@
+/' @startuml
+
+' Models
+class InstituteSignup {
+    + email: str
+    + password: str
+    + name: str
+    + address: str
+}
+
+class UserLogin {
+    + email: str
+    + password: str
+}
+
+class EditUser {
+    + phone_number: str
+    + given_name: str
+    + family_name: str
+    + address: str
+}
+
+class CreateUser {
+    + email: str
+    + password: str
+    + phone_number: str
+    + given_name: str
+    + family_name: str
+    + created_at: date
+    + address: Optional[str]
+    + role: str
+}
+
+class FetchUser {
+    + user_id: str
+    + email: str
+    + created_at: date
+    + role_id: str
+    + institution_id: Optional[str]
+    + professional_id: Optional[str]
+    + patient_id: Optional[str]
+}
+
+class AddHealthData {
+    + heartrate: Optional[float]
+    + oxygen: Optional[float]
+    + temperature: Optional[float]
+    + device_id: UUID
+}
+
+class CreateHealthcareProfessional {
+    + institution_id: str
+    + name: str
+    + specialization: str
+    + contact_number: str
+    + email: EmailStr
+}
+
+class FetchHealthcareProfessional {
+    + professional_id: int
+    + institution_id: str
+    + name: str
+    + specialization: str
+    + contact_number: str
+    + email: EmailStr
+    + created_at: datetime
+}
+
+class InstitutionCreate {
+    + name: str
+    + address: str
+    + contact_number: str
+}
+
+class InstitutionUpdate {
+    + name: str
+    + address: str
+    + contact_number: str
+}
+
+class PatientCreate {
+    + institution_id: str
+    + name: str
+    + dob: date
+    + contact_number: Optional[str]
+    + email: str
+    + address: Optional[str]
+    + device_id: UUID
+}
+
+class PatientUpdate {
+    + name: str
+    + dob: date
+    + contact_number: str
+    + email: str
+    + address: str
+}
+
+' Services
+class AuthService {
+    + signupInstitute(user: InstituteSignup, db: asyncpg.Connection): dict
+    + login(user: UserLogin, db: asyncpg.Connection): dict
+    + check_user_verification(email: str): bool
+    + add_users(db: asyncpg.Connection, user_table: dict): str
+    + asign_role(db: asyncpg.Connection, u_id: str, u_role: str): tuple
+    + save_Institution_to_db(db: asyncpg.Connection, user_data: dict): str
+    + fetch_user_by_email(email: str, db: asyncpg.Connection): dict
+}
+
+class HealthDataService {
+    + add_health_data(user_data: AddHealthData, db: asyncpg.Connection): str
+}
+
+class HealthcareProfessionalService {
+    + add_healthcare_professional(professional: CreateHealthcareProfessional, db: asyncpg.Connection): dict
+    + get_healthcare_professionals(db: asyncpg.Connection): list
+}
+
+class PatientService {
+    + create_patient_service(patient: PatientCreate, db: asyncpg.Connection): dict
+    + read_patient_service(patient_id: int, db: asyncpg.Connection): dict
+    + update_patient_service(patient_id: int, patient: PatientUpdate, db: asyncpg.Connection): dict
+    + delete_patient_service(patient_id: int, db: asyncpg.Connection): dict
+}
+
+' Routes
+class AuthRoutes {
+    + POST /signup/ins
+    + POST /login
+    + GET /fecthUser/{email}
+}
+
+class HealthDataRoutes {
+    + POST /add
+}
+
+class HealthcareProfessionalRoutes {
+    + POST /add
+    + GET /fetch
+}
+
+class PatientRoutes {
+    + POST /add
+    + PUT /edit/{patient_id}
+    + DELETE /delete/{patient_id}
+}
+
+' Configurations
+class Database {
+    + init_pool(): None
+    + close_pool(): None
+    + get_connection(): asyncpg.Connection
+}
+
+class Firebase {
+    + initialize_app(): None
+    + verify_id_token(token: str): dict
+}
+
+class MainApp {
+    + lifespan(app: FastAPI): asynccontextmanager
+    + add_middleware(CORSMiddleware)
+}
+
+' Relationships
+InstituteSignup --> AuthService
+UserLogin --> AuthService
+AddHealthData --> HealthDataService
+CreateHealthcareProfessional --> HealthcareProfessionalService
+PatientCreate --> PatientService
+PatientUpdate --> PatientService
+
+AuthService --> AuthRoutes
+HealthDataService --> HealthDataRoutes
+HealthcareProfessionalService --> HealthcareProfessionalRoutes
+PatientService --> PatientRoutes
+
+Database --> AuthService
+Database --> HealthDataService
+Database --> HealthcareProfessionalService
+Database --> PatientService
+Firebase --> AuthService
+
+@enduml
+ '/
+
+ @startuml
+
+' Core Entities
+class User {
+    + email: str
+    + password: str
+    + role: str
+}
+
+class Patient {
+    + id: str
+    + name: str
+    + dob: date
+    + contact_number: Optional[str]
+}
+
+class HealthcareProfessional {
+    + id: str
+    + name: str
+    + specialization: str
+    + institution_id: str
+}
+
+class Institution {
+    + id: str
+    + name: str
+    + address: str
+}
+
+class HealthData {
+    + id: str
+    + patient_id: str
+    + heart_rate: Optional[float]
+    + oxygen_level: Optional[float]
+    + temperature: Optional[float]
+    + timestamp: datetime
+}
+
+' Services
+class AuthService {
+    + signup(user: User): dict
+    + login(email: str, password: str): dict
+}
+
+class HealthDataService {
+    + add_health_data(data: HealthData): dict
+}
+
+class PatientService {
+    + create_patient(patient: Patient): dict
+    + update_patient(patient_id: str, patient: Patient): dict
+}
+
+' Routes
+class AuthRoutes {
+    + POST /signup
+    + POST /login
+}
+
+class HealthDataRoutes {
+    + POST /health-data/add
+}
+
+class PatientRoutes {
+    + POST /patients/add
+    + PUT /patients/edit/{patient_id}
+}
+
+' Relationships
+User --> AuthService : uses >
+Patient --> HealthData : records >
+HealthcareProfessional --> Institution : belongs to >
+HealthData --> Patient : belongs to >
+AuthService --> AuthRoutes : handles >
+HealthDataService --> HealthDataRoutes : handles >
+PatientService --> PatientRoutes : handles >
+
+@enduml

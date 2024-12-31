@@ -1,7 +1,7 @@
 import { Check, Eye, EyeOff } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { PasswordStrengthMeter } from '../../component/public/PasswordStrengthMeter'
+import { PasswordStrengthMeter } from '../../components/public/PasswordStrengthMeter'
  
 export default function Signup() {
   const [isLoading, setIsLoading] = useState(false)
