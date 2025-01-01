@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Layout, Users, Activity, Laptop, Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { icon: <Layout />, text: "Dashboard" },
-  { icon: <Users />, text: "Professionals" },
-  { icon: <Activity />, text: "Patient" },
-  { icon: <Laptop />, text: "Devices" },
+  { path: "/institutes/h-provider/", text: "Dashboard" },
+  { path: "/institutes/h-provider/professionals", text: "Professionals" },
+  { path: "/institutes/h-provider/patient", text: "Patient" },
+  { path: "/institutes/h-provider/devices", text: "Devices" },
 ];
 
 export const Navigation = () => {
@@ -17,13 +17,8 @@ export const Navigation = () => {
       <div className="flex items-center">
         <img src="/logo.png" alt="logo" className="w-20" />
         <div className="hidden md:flex items-center space-x-6 ml-8">
-          {navItems.map((item, index) => (
-            <NavItem
-              key={item.text}
-              icon={item.icon}
-              text={item.text}
-              active={index === 0}
-            />
+          {navItems.map((item) => (
+            <NavItem key={item.text} path={item.path} text={item.text} />
           ))}
         </div>
       </div>
@@ -42,7 +37,7 @@ export const Navigation = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            {isOpen ? "X" : "☰"}
           </motion.div>
         </AnimatePresence>
       </button>
@@ -57,12 +52,11 @@ export const Navigation = () => {
             className="absolute top-full left-0 right-0 bg-[#046ab2] py-4 px-4 md:hidden z-40"
           >
             <div className="flex flex-col space-y-4">
-              {navItems.map((item, index) => (
+              {navItems.map((item) => (
                 <MobileNavItem
                   key={item.text}
-                  icon={item.icon}
+                  path={item.path}
                   text={item.text}
-                  active={index === 0}
                   onClick={() => setIsOpen(false)}
                 />
               ))}
@@ -83,61 +77,35 @@ export const Navigation = () => {
 };
 
 const NavItem = ({
-  icon,
+  path,
   text,
-  active = false,
 }: {
-  icon: React.ReactNode;
+  path: string;
   text: string;
-  active?: boolean;
 }) => (
-  <motion.button
+  <motion.div
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
-    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors
-      ${
-        active
-          ? "text-white bg-[#1d6cc3] font-bold"
-          : "text-white/70 hover:text-white"
-      }`}
+    className="px-3 py-2 rounded-lg transition-colors text-white/70 hover:text-white"
   >
-    <motion.span
-      initial={{ rotate: 0 }}
-      whileHover={{ rotate: 15, transition: { duration: 0.2 } }}
-    >
-      {icon}
-    </motion.span>
-    <span>{text}</span>
-  </motion.button>
+    <Link to={path}>{text}</Link>
+  </motion.div>
 );
 
 const MobileNavItem = ({
-  icon,
+  path,
   text,
-  active = false,
   onClick,
 }: {
-  icon: React.ReactNode;
+  path: string;
   text: string;
-  active?: boolean;
   onClick: () => void;
 }) => (
-  <motion.button
+  <motion.div
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className={`flex items-center space-x-4 w-full px-4 py-3 rounded-lg transition-colors
-      ${
-        active
-          ? "text-white bg-white/10"
-          : "text-white/70 hover:text-white hover:bg-white/5"
-      }`}
+    className="w-full px-4 py-3 rounded-lg transition-colors text-white/70 hover:text-white hover:bg-white/5"
   >
-    <motion.span
-      initial={{ rotate: 0 }}
-      whileHover={{ rotate: 15, transition: { duration: 0.2 } }}
-    >
-      {icon}
-    </motion.span>
-    <span>{text}</span>
-  </motion.button>
+    <Link to={path}>{text}</Link>
+  </motion.div>
 );

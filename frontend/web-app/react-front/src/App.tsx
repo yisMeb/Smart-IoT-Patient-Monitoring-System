@@ -1,13 +1,13 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Signup from './pages/public/signup'; 
-import Login from './pages/public/login'; 
-import Home from './pages/public/home'; 
-import NoPage from './components/public/nopage' 
-import { UserRoleProvider } from './context/UserRoleContext';
-import VerifyEmail from './pages/public/VerifyEmail';
-import ProviderDashboard from './pages/protected/ProviderDashboard';
-import ProtectedRoute from './context/ProtectedRoute';
-import ProfessionalDashboard from './pages/protected/ProfessionalDashboard';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Signup from "./pages/public/signup";
+import Login from "./pages/public/login";
+import Home from "./pages/public/home";
+import NoPage from "./components/public/nopage";
+import { UserRoleProvider } from "./context/UserRoleContext";
+import VerifyEmail from "./pages/public/VerifyEmail";
+import ProviderDashboard from "./pages/protected/ProviderDashboard";
+import ProtectedRoute from "./context/ProtectedRoute";
+import ManageProfessionals from "./pages/protected/ManageProfessionals";
 
 function App() {
   return (
@@ -21,24 +21,42 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="*" element={<NoPage />} />
 
-          {/* Protected Auth Routes - Accessible by any authenticated user */}
-          <Route path="/institutes/h-provider" element={
+          {/* Protected routes */}
+          <Route
+            path="/institutes/h-provider"
+            element={
               <ProtectedRoute requiredRole="institution">
                 <ProviderDashboard />
               </ProtectedRoute>
-            }>
-          </Route>
-          
-          <Route path="/professionals/dashboard" element={
-              <ProtectedRoute requiredRole="professionals">
-                <ProfessionalDashboard />
+            }
+          />
+          <Route
+            path="/institutes/h-provider/professionals"
+            element={
+              <ProtectedRoute requiredRole="institution">
+                <ManageProfessionals />
               </ProtectedRoute>
-            }>
-          </Route>
-
+            }
+          />
+          <Route
+            path="/institutes/h-provider/patient"
+            element={
+              <ProtectedRoute requiredRole="institution">
+                <div>Patient Page</div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/institutes/h-provider/devices"
+            element={
+              <ProtectedRoute requiredRole="institution">
+                <div>Devices Page</div>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-    </Router>
-    </UserRoleProvider>    
+      </Router>
+    </UserRoleProvider>
   );
 }
 
