@@ -127,9 +127,9 @@ export default function Login() {
                     navigate("/verify-email", { state: { email, user_id } });
                 } else {
                     if (user_role === "institution") {
-                        navigate("/institutes");
+                        navigate("/institutes/h-provider");
                     } else if (user_role === "professionals") {
-                        navigate("/professionals");
+                        navigate("/professionals/dashboard");
                     } else if(user_role === "admin") {
                         navigate("/admin");
                     }
