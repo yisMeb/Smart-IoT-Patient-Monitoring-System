@@ -6,6 +6,8 @@ import NoPage from "./components/public/nopage";
 import { UserRoleProvider } from "./context/UserRoleContext";
 import VerifyEmail from "./pages/public/VerifyEmail";
 import ProviderDashboard from "./pages/protected/ProviderDashboard";
+import ManagePatient from "./pages/protected/ManagePatient";
+import ManageDevices from "./pages/protected/ManageDevices";
 import ProtectedRoute from "./context/ProtectedRoute";
 import ManageProfessionals from "./pages/protected/ManageProfessionals";
 
@@ -42,7 +44,7 @@ function App() {
             path="/institutes/h-provider/patient"
             element={
               <ProtectedRoute requiredRole="institution">
-                <div>Patient Page</div>
+                <ManagePatient/>
               </ProtectedRoute>
             }
           />
@@ -50,7 +52,7 @@ function App() {
             path="/institutes/h-provider/devices"
             element={
               <ProtectedRoute requiredRole="institution">
-                <div>Devices Page</div>
+                <ManageDevices/>
               </ProtectedRoute>
             }
           />
