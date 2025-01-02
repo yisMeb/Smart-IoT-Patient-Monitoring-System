@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import asyncpg
 from fastapi import HTTPException
-from app.api.models.healthcare_professional_models import CreateHealthcareProfessional
+from app.api.models.healthcare_professional_models import CreateHealthcareProfessional, UpdateHealthcareProfessional
 from datetime import datetime, timezone
 
 
@@ -67,3 +67,52 @@ async def get_healthcare_professionals(db: asyncpg.Connection):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+
+async def delete_healthcare_professionals(db: asyncpg.Connection, institution_id :str, professional_id:str  ):
+    query = """
+    DELETE FROM public.healthcare_professionals
+	WHERE institution_id = $1 AND professional_id = $2
+    """
+    professionals = await db.fetch(query ,institution_id ,professional_id )
+    return professionals 
+
+
+
+async def update_healthcare_professional(
+    db: asyncpg.Connection, professional_id: str, updates: UpdateHealthcareProfessional
+):
+    fields = []
+    values = []
+
+    if updates.name:
+        fields.append(f"name = ${len(values) + 1}")
+        values.append(updates.name)
+    if updates.specialization:
+        fields.append(f"specialization = ${len(values) + 1}")
+        values.append(updates.specialization)
+    if updates.contact_number:
+        fields.append(f"contact_number = ${len(values) + 1}")
+        values.append(updates.contact_number)
+    if updates.email:
+        fields.append(f"email = ${len(values) + 1}")
+        values.append(updates.email)
+
+    values.append(professional_id)
+
+    if not fields:
+        raise HTTPException(status_code=400, detail="No fields to update provided.")
+
+    query = f"""
+    UPDATE healthcare_professionals
+    SET {', '.join(fields)}
+    WHERE professional_id = ${len(values)}
+    RETURNING *
+    """
+
+    # Execute the query
+    updated_professional = await db.fetchrow(query, *values)
+
+    if not updated_professional:
+        raise HTTPException(status_code=404, detail="Healthcare professional not found.")
+
+    return dict(updated_professional)

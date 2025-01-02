@@ -9,7 +9,7 @@ class CreateHealthcareProfessional(BaseModel):
     email: EmailStr
 
 class FetchHealthcareProfessional(BaseModel):
-    professional_id: int
+    professional_id: str
     institution_id: str
     name: str
     specialization: str
@@ -19,3 +19,11 @@ class FetchHealthcareProfessional(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+class UpdateHealthcareProfessional(BaseModel):
+    name: str | None = None
+    specialization: str | None = None
+    contact_number: str | None = None
+    email: EmailStr | None = None
