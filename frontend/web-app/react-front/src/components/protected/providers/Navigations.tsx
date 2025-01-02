@@ -15,7 +15,7 @@ export const Navigation = () => {
   return (
     <nav className="relative flex items-center justify-between p-4 bg-transparent z-50">
       <div className="flex items-center">
-        <img src="/logo.png" alt="logo" className="w-20" />
+        <img src="/logo1.png" alt="logo" className="w-20" />
         <div className="hidden md:flex items-center space-x-6 ml-8">
           {navItems.map((item) => (
             <NavItem key={item.text} path={item.path} text={item.text} />

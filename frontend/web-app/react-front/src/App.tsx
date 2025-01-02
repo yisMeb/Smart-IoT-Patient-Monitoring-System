@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Signup from "./pages/public/signup";
 import Login from "./pages/public/login";
-import Home from "./pages/public/home";
 import NoPage from "./components/public/nopage";
 import { UserRoleProvider } from "./context/UserRoleContext";
 import VerifyEmail from "./pages/public/VerifyEmail";
@@ -17,7 +16,7 @@ function App() {
       <Router>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
