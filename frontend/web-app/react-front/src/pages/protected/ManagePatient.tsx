@@ -114,8 +114,8 @@ const ManagePatient: React.FC = () => {
                                         </div>
                                     </div>
             
-                                    <div className="mt-6 flex justify-end space-x-4">
-                                        <Button
+                                    <div className="mt-6 flex justify-center space-x-4 w-full">
+                                    <Button
                                             className="px-20 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
                                             onClick={() => setIsModalOpen(false)} // Close the modal
                                         >

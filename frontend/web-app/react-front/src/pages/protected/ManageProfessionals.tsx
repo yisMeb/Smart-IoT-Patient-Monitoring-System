@@ -39,10 +39,10 @@ const ManageProfessionals: React.FC = () => {
         // Add more patient objects as needed
     ];
 
-   /*  const handleEdit = (professionalId: string) => {
+   const handleEdit = (professionalId: string) => {
         // Handle edit action (e.g., open a modal or navigate to an edit page)
         console.log(`Editing patient with ID: ${professionalId}`);
-    }; */
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -120,7 +120,7 @@ const ManageProfessionals: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-end space-x-4">
+                        <div className="mt-6 flex justify-center space-x-4 w-full">
                             <Button
                                 className="px-20 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
                                 onClick={() => setIsModalOpen(false)} // Close the modal
@@ -170,7 +170,8 @@ const ManageProfessionals: React.FC = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{professional.department}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{professional.contact}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button className="flex items-center px-4 py-2 bg-[#e5e7eb] text-[#71717a] rounded-lg hover:bg-slate-600 transition-colors">
+                                        <button className="flex items-center px-4 py-2 bg-[#e5e7eb] text-[#71717a] rounded-lg hover:bg-slate-600 transition-colors"
+                                        onClick={() => setIsModalOpen(true)}>
                                                 Edit
                                             </button>
                                         </td>
