@@ -11,7 +11,7 @@ sudo apt install -y python3.12 python3.12-venv python3.12-dev build-essential li
 PROJECT_DIR="/home/ubuntu/Smart-IoT-Patient-Monitoring-System"
 BACKEND_DIR="$PROJECT_DIR/backend"
 USERNAME=yismeb
-TOKEN=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
+TOKEN=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
 REPO=yisMeb/Smart-IoT-Patient-Monitoring-System
 
 # Remove existing project directory if it exists
