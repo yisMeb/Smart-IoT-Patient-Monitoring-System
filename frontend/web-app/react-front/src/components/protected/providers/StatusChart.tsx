@@ -1,17 +1,24 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from "react";
 import type { StatusBreakdown } from '../../../types/dashboard';
+import { fetchAllPatient } from "@/service/api"; // Assuming you have this function
+import { useNavigate } from 'react-router-dom';
 
-const DonutChart = ({ data, title, total }: { 
-  data: { name: string; value: number; color: string; }[];
+const DonutChart = ({
+  data,
+  title,
+  total,
+}: {
+  data: { name: string; value: number; color: string }[];
   title: string;
   total: number;
 }) => (
   <div className={`bg-white rounded-xl p-3 shadow-sm flex items-center justify-between`}>
     <div className="flex-1 flex flex-col items-start">
-      <h1 className="text-lg font-semibold mb-1">{total}</h1> 
+      <h1 className="text-lg font-semibold mb-1">{total}</h1>
       <p className="text-gray-500 mb-1 text-xs">Total {title}</p>
-      
-      <div className="h-[130px] w-full"> 
+
+      <div className="h-[130px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -26,7 +33,7 @@ const DonutChart = ({ data, title, total }: {
               cornerRadius={40}
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={3}/>
+                <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={3} />
               ))}
             </Pie>
           </PieChart>
@@ -38,9 +45,9 @@ const DonutChart = ({ data, title, total }: {
       {data.map((item, index) => (
         <div key={index} className="flex items-center justify-between">
           <div className="flex items-center">
-            <div 
-              className="w-4 h-1 rounded-full mr-2" 
-              style={{ backgroundColor: item.color }} 
+            <div
+              className="w-4 h-1 rounded-full mr-2"
+              style={{ backgroundColor: item.color }}
             />
             <span className="text-gray-600">{item.name}</span>
           </div>
@@ -52,39 +59,70 @@ const DonutChart = ({ data, title, total }: {
 );
 
 export const StatusCharts = () => {
-  // API call
-  const patientData: StatusBreakdown = {
-    total: 237,
-    active: 26,
-    inactive: 48,
-    inProgress: 20
-  };
+  const [patientData, setPatientData] = useState<StatusBreakdown | null>(null);
+  const [deviceData, setDeviceData] = useState<StatusBreakdown | null>(null);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const fetchStatusData = async () => {
+      try {
+        const patients = await fetchAllPatient(navigate);
+        const patientStatusBreakdown = patients.reduce(
+          (acc: Record<string, number>, patient: { status: string }) => {
+            if (patient.status === "active") acc.active += 1;
+            else if (patient.status === "inactive") acc.inactive += 1;
+            else if (patient.status === "inProgress") acc.inProgress += 1;
+            return acc;
+          },
+          { active: 0, inactive: 0, inProgress: 0 }
+        );
 
-  const deviceData: StatusBreakdown = {
-    total: 237,
-    active: 26,
-    inactive: 48,
-    inProgress: 15
-  };
+        const totalPatients = patients.length;
+
+        setPatientData({
+          total: totalPatients,
+          active: patientStatusBreakdown.active,
+          inactive: patientStatusBreakdown.inactive,
+          inProgress: patientStatusBreakdown.inProgress,
+        });
+
+        setDeviceData( {
+          total: 2,
+          active: patientStatusBreakdown.active,
+          inactive: patientStatusBreakdown.inactive,
+          inProgress: patientStatusBreakdown.inProgress,
+        }
+         );
+      } catch (error) {
+        console.error("Failed to fetch patient data:", error);
+      }
+    };
+
+    fetchStatusData();
+  }, []);
 
   const chartData = (data: StatusBreakdown) => [
-    { name: 'Active', value: data.active, color: '#00A3FF' },
-    { name: 'Inactive', value: data.inactive, color: '#50CD89' },
-    { name: 'In Progress', value: data.inProgress, color: '#E4E6EF' },
+    { name: "Active", value: data.active, color: "#00A3FF" },
+    { name: "Inactive", value: data.inactive, color: "#50CD89" },
+    { name: "In Progress", value: data.inProgress, color: "#E4E6EF" },
   ];
 
   return (
     <div className="flex flex-col gap-4 max-h-[570px] overflow-hidden">
-      <DonutChart 
-        data={chartData(patientData)} 
-        title="Patients" 
-        total={patientData.total} 
-      />
-      <DonutChart 
-        data={chartData(deviceData)} 
-        title="Devices" 
-        total={deviceData.total} 
-      />
+      {patientData && (
+        <DonutChart
+          data={chartData(patientData)}
+          title="Patients"
+          total={patientData.total}
+        />
+      )}
+      {deviceData && (
+        <DonutChart
+          data={chartData(deviceData)}
+          title="Devices"
+          total={deviceData.total}
+        />
+      )}
     </div>
   );
 };

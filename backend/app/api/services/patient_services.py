@@ -21,8 +21,8 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
         formatted_phone_number = validate_phone_number(patient.contact_number)
        
         query = """
-        INSERT INTO public.patients (institution_id, name, dob, contact_number, email, address, device_id, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO public.patients (institution_id, name, dob, contact_number, email, address, device_id, created_at, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING patient_id, institution_id
         """
         record = await db.fetchrow(
@@ -34,7 +34,8 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
             patient.email,
             patient.address,
             patient.device_id,
-            current_date
+            current_date,
+            patient.status
         )
 
         if not record:
@@ -78,11 +79,11 @@ async def read_all_patients_service(db: asyncpg.Connection):
 async def update_patient_service(patient_id: int, patient: PatientUpdate, db: asyncpg.Connection):
     query = """
     UPDATE patients
-    SET name = $1, dob = $2, contact_number = $3, email = $4, address = $5, 
+    SET name = $1, dob = $2, contact_number = $3, email = $4, address = $5, status = $7
     WHERE patient_id = $6
-    RETURNING patient_id, institution_id, name, dob, contact_number, email, address, created_at
+    RETURNING patient_id, institution_id, name, dob, contact_number, email, address, created_at, status
     """
-    values = (patient.name, patient.dob, patient.contact_number, patient.address, patient_id)
+    values = (patient.name, patient.dob, patient.contact_number, patient.address, patient.status, patient_id)
     patient_record = await db.fetchrow(query, *values)
     return patient_record
 

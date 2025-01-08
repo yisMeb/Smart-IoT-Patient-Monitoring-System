@@ -9,6 +9,7 @@ class PatientCreate(BaseModel):
     dob: date
     contact_number: Optional[str]
     email: str
+    status: str
     address: Optional[str]  
     device_id: UUID
     class Config:
@@ -20,4 +21,5 @@ class PatientUpdate(BaseModel):
     contact_number: str
     email: str
     address: str
+    status: str
 
