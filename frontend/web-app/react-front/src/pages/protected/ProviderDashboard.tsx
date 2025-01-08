@@ -2,7 +2,6 @@ import { Navigation } from '../../components/protected/providers/Navigations';
 import { MetricCards } from '../../components/protected/providers/MetricCards';
 import { PatientChart } from '../../components/protected/providers/PatientChart';
 import { StatusCharts } from '../../components/protected/providers/StatusChart';
-import { Button } from '@/components/ui/button';
 
 const ProviderDashboard = () => {
   return (
@@ -21,9 +20,7 @@ const ProviderDashboard = () => {
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-              <Button className="px-4 py-2 bg-white rounded-lg text-gray-800 hover:bg-gray-100 hover:shadow-lg hover:scale-10">
-                Reports
-              </Button>
+              
             </div>
           </div>
         </div>

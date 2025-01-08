@@ -39,10 +39,10 @@ const ManageProfessionals: React.FC = () => {
         // Add more patient objects as needed
     ];
 
-   const handleEdit = (professionalId: string) => {
+   /* const handleEdit = (professionalId: string) => {
         // Handle edit action (e.g., open a modal or navigate to an edit page)
         console.log(`Editing patient with ID: ${professionalId}`);
-    };
+    }; */
 
     return (
         <div className="min-h-screen bg-gray-50">

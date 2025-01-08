@@ -52,10 +52,10 @@ const ManageDevices: React.FC = () => {
     }
   };
 
-  const handleEdit = (deviceId: string) => {
+ /*  const handleEdit = (deviceId: string) => {
     console.log(`Edit device with ID: ${deviceId}`);
     // Add your edit logic here
-  };
+  }; */
 
   return (
     <div className="min-h-screen bg-gray-50">

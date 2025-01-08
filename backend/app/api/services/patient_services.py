@@ -67,6 +67,13 @@ async def read_patient_service(patient_id: int, db: asyncpg.Connection):
     patient = await db.fetchrow(query, patient_id)
     return patient
 
+async def read_all_patients_service(db: asyncpg.Connection):
+    query = """
+    SELECT *
+    FROM patients
+    """
+    patients = await db.fetch(query)
+    return patients
 
 async def update_patient_service(patient_id: int, patient: PatientUpdate, db: asyncpg.Connection):
     query = """
