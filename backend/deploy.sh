@@ -17,8 +17,16 @@ REPO=yisMeb/Smart-IoT-Patient-Monitoring-System
 # Remove existing project directory and clone fresh
 if [ -d "$PROJECT_DIR" ]; then
     echo "Removing existing project directory..."
-    rm -rf $PROJECT_DIR
+    if rm -rf "$PROJECT_DIR"; then
+        echo "Project directory removed successfully."
+    else
+        echo "Failed to remove the project directory. Check permissions."
+        exit 1
+    fi
+else
+    echo "Project directory does not exist. No removal needed."
 fi
+
 
 echo "Cloning repository..."
 git clone https://$USERNAME:$TOKEN@github.com/$REPO.git $PROJECT_DIR || { echo "Git clone failed"; exit 1; }
