@@ -14,12 +14,15 @@ USERNAME=yismeb
 TOKEN=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
 REPO=yisMeb/Smart-IoT-Patient-Monitoring-System
 
-# Navigate to the project directory
-cd $PROJECT_DIR || { echo "Project directory not found"; exit 1; }
+# Remove existing project directory if it exists
+if [ -d "$PROJECT_DIR" ]; then
+    echo "Removing existing project directory..."
+    rm -rf "$PROJECT_DIR"
+fi
 
-# Pull the latest changes from the repository
-echo "Pulling latest changes from the repository..."
-git pull https://$USERNAME:$TOKEN@github.com/$REPO.git
+# Clone the repository
+echo "Cloning repository..."
+git clone https://$USERNAME:$TOKEN@github.com/$REPO.git $PROJECT_DIR
 
 # Ensure backend configuration directories exist
 mkdir -p $BACKEND_DIR/app/config
@@ -28,11 +31,9 @@ mkdir -p $BACKEND_DIR/app/config
 cd $BACKEND_DIR
 echo "Current directory: $(pwd)"
 
-# Set up the Python virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    echo "Creating Python virtual environment..."
-    python3.12 -m venv venv
-fi
+# Set up the Python virtual environment
+echo "Creating Python virtual environment..."
+python3.12 -m venv venv
 
 # Activate virtual environment
 source venv/bin/activate
