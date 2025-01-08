@@ -14,116 +14,74 @@ USERNAME=yismeb
 TOKEN=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
 REPO=yisMeb/Smart-IoT-Patient-Monitoring-System
 
-# Remove existing project directory if it exists
+# Remove existing project directory and clone fresh
 if [ -d "$PROJECT_DIR" ]; then
     echo "Removing existing project directory..."
-    rm -rf "$PROJECT_DIR"
+    rm -rf $PROJECT_DIR
 fi
 
-# Clone the repository
 echo "Cloning repository..."
-git clone https://$USERNAME:$TOKEN@github.com/$REPO.git $PROJECT_DIR
+git clone https://$USERNAME:$TOKEN@github.com/$REPO.git $PROJECT_DIR || { echo "Git clone failed"; exit 1; }
 
-# Ensure backend configuration directories exist
-mkdir -p $BACKEND_DIR/app/config
-
-# Navigate to backend directory
-cd $BACKEND_DIR
-echo "Current directory: $(pwd)"
+# Set up the backend
+cd $BACKEND_DIR || { echo "Backend directory not found"; exit 1; }
 
 # Set up the Python virtual environment
-echo "Creating Python virtual environment..."
-python3.12 -m venv venv
+if [ ! -d "venv" ]; then
+    echo "Creating Python virtual environment..."
+    python3.12 -m venv venv
+fi
 
-# Activate virtual environment
 source venv/bin/activate
-
-# Verify Python environment
 which python
 python --version
 
 # Install dependencies
-echo "Installing dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+if [ -f "requirements.txt" ]; then
+    echo "Installing dependencies..."
+    pip install --upgrade pip
+    pip install -r requirements.txt
+else
+    echo "requirements.txt not found!"
+    exit 1
+fi
 
-# Copy configuration files from a temp directory on EC2 to backend config
+# Copy configuration files
 echo "Copying configuration files..."
-cp /home/ubuntu/temp/.env /home/ubuntu/Smart-IoT-Patient-Monitoring-System/backend/.env || echo ".env file copy failed"
-cp /home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json $BACKEND_DIR/app/config/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json || echo "Firebase config copy failed"
-cp /home/ubuntu/temp/private-subnet-patient-management.pem /home/ubuntu/.ssh/ || echo "PEM file copy failed"
-chmod 600 /home/ubuntu/.ssh/private-subnet-patient-management.pem || echo "PEM file permission change failed"
+cp /home/ubuntu/temp/.env $BACKEND_DIR/.env || echo ".env file copy failed"
+cp /home/ubuntu/temp/iot-patient-monitoring-s-8a328-firebase-adminsdk-w8gnl-e08f5c2d89.json $BACKEND_DIR/app/config/ || echo "Firebase config copy failed"
 
-# Configure Nginx if not already configured
+# Configure Nginx
 if [ ! -f /etc/nginx/sites-available/fastapi_app ]; then
     echo "Configuring Nginx..."
     sudo tee /etc/nginx/sites-available/fastapi_app << EOF
 server {
-    listen 80 default_server;
+    listen 80;
     server_name _;
-
-    access_log /var/log/nginx/fastapi_access.log;
-    error_log /var/log/nginx/fastapi_error.log;
 
     location / {
         proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
         proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
-
-        add_header Access-Control-Allow-Origin "*";
-        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
-        add_header Access-Control-Allow-Headers "Authorization, Content-Type";
-        add_header Access-Control-Allow-Credentials "true";
     }
 }
 EOF
-    # Enable the site and remove default
-    sudo rm -f /etc/nginx/sites-enabled/default
     sudo ln -sf /etc/nginx/sites-available/fastapi_app /etc/nginx/sites-enabled/
 fi
 
-# Test Nginx configuration
-sudo nginx -t
-
-# Stop any existing uvicorn processes
-echo "Stopping any existing uvicorn processes..."
-pkill -f uvicorn || true
-
-# Start the FastAPI app with Uvicorn
-echo "Starting the FastAPI application..."
-cd $BACKEND_DIR
-nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > nohup.out 2>&1 &
-
-# Restart Nginx
+sudo nginx -t || { echo "Nginx configuration test failed"; exit 1; }
 sudo systemctl restart nginx
 
-# Wait for services to start
+# Start the FastAPI app
+pkill -f uvicorn || true
+nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > nohup.out 2>&1 &
 sleep 5
 
-# Verify FastAPI and Nginx services
-echo "Verifying services..."
 if curl -s http://localhost:8000/ > /dev/null; then
     echo "FastAPI is running!"
 else
     echo "FastAPI failed to start!"
-    echo "Checking logs..."
     tail -n 50 nohup.out
     exit 1
 fi
 
-if sudo systemctl is-active --quiet nginx; then
-    echo "Nginx is running!"
-else
-    echo "Nginx failed to start!"
-    echo "Checking Nginx logs..."
-    sudo tail -n 50 /var/log/nginx/error.log
-    exit 1
-fi
-
-echo "Deployment completed! Try accessing http://$(curl -s ifconfig.me)/health"
+echo "Deployment completed!"
