@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { fetchAllPatient, fetchAllProfessionals } from '@/service/api';
+import { fetchAllDevices, fetchAllPatient, fetchAllProfessionals } from '@/service/api';
 import { useNavigate } from 'react-router-dom';
 
 interface MetricCardProps {
@@ -76,6 +76,8 @@ export const MetricCards = () => {
         const patientCount = patients.length;
         const professionals = await fetchAllProfessionals(navigate);
         const professionalCount = professionals.length;
+        const devices = await fetchAllDevices(navigate);
+        const deviceCount = devices.length;
 
         const patient_previousCount = 1;
         const patient_change = ((patientCount - patient_previousCount) / patient_previousCount) * 100;
@@ -83,10 +85,13 @@ export const MetricCards = () => {
         const professional_previousCount = 1;
         const professional_change = ((professionalCount - professional_previousCount) / professional_previousCount) * 100;
 
+        const device_previousCount = 1;
+        const device_change = ((deviceCount - device_previousCount) / device_previousCount) * 100;
+
         setMetrics([
           { value: patientCount.toString(), label: 'Patients', change: parseFloat(patient_change.toFixed(1)) },
           { value: professionalCount.toString(), label: 'Professionals', change: parseFloat(professional_change.toFixed(1)) },
-          { value: '9', label: 'Devices', change: -0.47 },
+          { value: deviceCount.toString(), label: 'Devices', change: parseFloat(device_change.toFixed(1)) },
           { value: '72.4%', label: 'Alert Resolved', change: -0.647 },
           { value: '72.4%', label: 'New device', change: -0.647 },
         ]);

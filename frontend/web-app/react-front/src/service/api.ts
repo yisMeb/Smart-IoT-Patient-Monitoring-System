@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
 const All_PROFESSIONALS = import.meta.env.VITE_API_GET_ALL_PROFESSIONALS as string;
+const ALL_DEVICES = import.meta.env.VITE_API_GET_ALL_DEVICES as string;
 const token = getIdTokenFromCookies();
 const role = getRoleFromCookies();
 
@@ -62,3 +63,32 @@ export const fetchAllProfessionals = async (navigate: ReturnType<typeof useNavig
     throw error;
   }
 }
+
+export const fetchAllDevices = async (navigate: ReturnType<typeof useNavigate>) => {
+  try {
+    if (!role || !token || isTokenExpired(token)) {
+      auth.signOut();
+      navigate('/login');
+      return;
+    }
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+
+    const response = await fetch(ALL_DEVICES, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch professionals:', error);
+    throw error;
+  }
+}
+

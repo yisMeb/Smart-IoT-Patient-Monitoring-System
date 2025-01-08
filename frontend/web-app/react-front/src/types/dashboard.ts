@@ -22,5 +22,12 @@ export interface MetricCardProps {
     inactive: number;
     inProgress: number;
   }
+
+  export interface StatusBreakdownDevice {
+    total: number;
+    assigned: number;
+    unassigned: number;
+  }
   
+
   

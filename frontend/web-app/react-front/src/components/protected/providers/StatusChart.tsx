@@ -1,7 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from "react";
-import type { StatusBreakdown } from '../../../types/dashboard';
-import { fetchAllPatient } from "@/service/api"; // Assuming you have this function
+import type { StatusBreakdown, StatusBreakdownDevice } from '../../../types/dashboard';
+import { fetchAllDevices, fetchAllPatient } from "@/service/api"; // Assuming you have this function
 import { useNavigate } from 'react-router-dom';
 
 const DonutChart = ({
@@ -60,13 +60,15 @@ const DonutChart = ({
 
 export const StatusCharts = () => {
   const [patientData, setPatientData] = useState<StatusBreakdown | null>(null);
-  const [deviceData, setDeviceData] = useState<StatusBreakdown | null>(null);
+  const [deviceData, setDeviceData] = useState<StatusBreakdownDevice | null>(null);
   const navigate = useNavigate();
   
   useEffect(() => {
     const fetchStatusData = async () => {
       try {
         const patients = await fetchAllPatient(navigate);
+        const devices = await fetchAllDevices(navigate);
+
         const patientStatusBreakdown = patients.reduce(
           (acc: Record<string, number>, patient: { status: string }) => {
             if (patient.status === "active") acc.active += 1;
@@ -77,7 +79,18 @@ export const StatusCharts = () => {
           { active: 0, inactive: 0, inProgress: 0 }
         );
 
+        const deviceAssignmentBreakdown = devices.reduce(
+          (acc: Record<string, number>, device: { is_assigned: boolean }) => {
+            if (device.is_assigned) acc.assigned += 1;
+            else acc.unassigned += 1;
+            return acc;
+          },
+          { assigned: 0, unassigned: 0 }
+        );
+
         const totalPatients = patients.length;
+        const totalDevices = devices.length;
+
 
         setPatientData({
           total: totalPatients,
@@ -87,10 +100,9 @@ export const StatusCharts = () => {
         });
 
         setDeviceData( {
-          total: 2,
-          active: patientStatusBreakdown.active,
-          inactive: patientStatusBreakdown.inactive,
-          inProgress: patientStatusBreakdown.inProgress,
+          total: totalDevices,
+          assigned: deviceAssignmentBreakdown.assigned,
+          unassigned: deviceAssignmentBreakdown.unassigned,
         }
          );
       } catch (error) {
@@ -106,6 +118,10 @@ export const StatusCharts = () => {
     { name: "Inactive", value: data.inactive, color: "#50CD89" },
     { name: "In Progress", value: data.inProgress, color: "#E4E6EF" },
   ];
+  const chartDataDevice = (data: StatusBreakdownDevice) => [
+    { name: "Assigned", value: data.assigned, color: "#00A3FF" },
+    { name: "Unassigned", value: data.unassigned, color: "#E4E6EF" },
+  ];
 
   return (
     <div className="flex flex-col gap-4 max-h-[570px] overflow-hidden">
@@ -118,7 +134,7 @@ export const StatusCharts = () => {
       )}
       {deviceData && (
         <DonutChart
-          data={chartData(deviceData)}
+          data={chartDataDevice(deviceData)}
           title="Devices"
           total={deviceData.total}
         />
@@ -126,3 +142,5 @@ export const StatusCharts = () => {
     </div>
   );
 };
+
+
