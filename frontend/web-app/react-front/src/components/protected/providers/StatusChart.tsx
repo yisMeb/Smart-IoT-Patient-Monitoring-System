@@ -66,9 +66,16 @@ export const StatusCharts = () => {
   useEffect(() => {
     const fetchStatusData = async () => {
       try {
-        const patients = await fetchAllPatient(navigate);
-        const devices = await fetchAllDevices(navigate);
-
+        const patients = (await fetchAllPatient(navigate)) || [];
+        const devices = (await fetchAllDevices(navigate)) || [];
+  
+        if (!Array.isArray(patients)) {
+          throw new Error("Invalid data format: patients is not an array");
+        }
+        if (!Array.isArray(devices)) {
+          throw new Error("Invalid data format: devices is not an array");
+        }
+  
         const patientStatusBreakdown = patients.reduce(
           (acc: Record<string, number>, patient: { status: string }) => {
             if (patient.status === "active") acc.active += 1;
@@ -78,7 +85,7 @@ export const StatusCharts = () => {
           },
           { active: 0, inactive: 0, inProgress: 0 }
         );
-
+  
         const deviceAssignmentBreakdown = devices.reduce(
           (acc: Record<string, number>, device: { is_assigned: boolean }) => {
             if (device.is_assigned) acc.assigned += 1;
@@ -87,31 +94,29 @@ export const StatusCharts = () => {
           },
           { assigned: 0, unassigned: 0 }
         );
-
+  
         const totalPatients = patients.length;
         const totalDevices = devices.length;
-
-
+  
         setPatientData({
           total: totalPatients,
           active: patientStatusBreakdown.active,
           inactive: patientStatusBreakdown.inactive,
           inProgress: patientStatusBreakdown.inProgress,
         });
-
-        setDeviceData( {
+  
+        setDeviceData({
           total: totalDevices,
           assigned: deviceAssignmentBreakdown.assigned,
           unassigned: deviceAssignmentBreakdown.unassigned,
-        }
-         );
+        });
       } catch (error) {
         console.error("Failed to fetch patient data:", error);
       }
     };
-
+  
     fetchStatusData();
-  }, []);
+  }, [navigate]);  
 
   const chartData = (data: StatusBreakdown) => [
     { name: "Active", value: data.active, color: "#00A3FF" },
@@ -125,20 +130,25 @@ export const StatusCharts = () => {
 
   return (
     <div className="flex flex-col gap-4 max-h-[570px] overflow-hidden">
-      {patientData && (
-        <DonutChart
-          data={chartData(patientData)}
-          title="Patients"
-          total={patientData.total}
-        />
+      {patientData ? (
+      <DonutChart
+        data={chartData(patientData)}
+        title="Patients"
+        total={patientData.total}
+      />
+      ) : (
+        <div className="text-center text-gray-500">No patient data available</div>
       )}
-      {deviceData && (
-        <DonutChart
-          data={chartDataDevice(deviceData)}
-          title="Devices"
-          total={deviceData.total}
-        />
-      )}
+
+    {deviceData ? (
+      <DonutChart
+        data={chartDataDevice(deviceData)}
+        title="Devices"
+        total={deviceData.total}
+      />
+    ) : (
+      <div className="text-center text-gray-500">No device data available</div>
+    )}
     </div>
   );
 };
