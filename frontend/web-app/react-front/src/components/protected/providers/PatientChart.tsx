@@ -68,7 +68,7 @@ export const PatientChart = () => {
       <div className="mb-6 flex items-center justify-between flex-wrap">
         <div className="pl-8">
           <h3 className="text-xl font-semibold">Patient Admitted</h3>
-          <p className="text-gray-500">Days</p>
+          <p className="text-gray-500">days</p>
         </div>
         <Popover>
           <PopoverTrigger asChild>
