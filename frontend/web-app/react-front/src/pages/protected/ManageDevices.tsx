@@ -7,7 +7,7 @@ const ManageDevices: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleAddDevice = () => {
-    // Handle the logic for adding a professional
+    // Handle the logic for adding a device
     console.log("Device added");
     setIsModalOpen(false); // Close the modal after confirming
   };
@@ -52,7 +52,7 @@ const ManageDevices: React.FC = () => {
     }
   };
 
- /*  const handleEdit = (deviceId: string) => {
+  /*  const handleEdit = (deviceId: string) => {
     console.log(`Edit device with ID: ${deviceId}`);
     // Add your edit logic here
   }; */
