@@ -58,8 +58,9 @@ const ManageProfessionals: React.FC = () => {
   const handleAddProfessional = async () => {
     setIsAdding(true); // Start loading
     try {
-      const Data = await addProfessional(newProfessional);
+      const Data = await addProfessional(navigate, newProfessional);
 
+      console.log(Data)
       // Refresh the list of professionals
       const updatedData = await fetchAllProfessionals(navigate);
       setProfessionals(updatedData);
@@ -86,7 +87,7 @@ const ManageProfessionals: React.FC = () => {
       setIsEditing(true); // Start loading
       try {
         // Call the updateProfessional function
-        await updateProfessional(selectedProfessional.professional_id, {
+        await updateProfessional(navigate, selectedProfessional.professional_id, {
           name: selectedProfessional.name,
           specialization: selectedProfessional.specialization,
           contact_number: selectedProfessional.contact_number,

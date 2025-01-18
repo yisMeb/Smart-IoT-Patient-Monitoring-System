@@ -1,12 +1,13 @@
 import React, { useEffect, createContext, useContext, useState } from 'react';
 import { auth } from '../lib/firebaseConfig'; 
-import {setIdTokenCookie, getRoleFromCookies} from '../lib/cookieUtils'
+import { setIdTokenCookie, getRoleFromCookies } from '../lib/cookieUtils';
 
 interface UserRoleContextType {
   roleName: string | null;
   setRoleName: (role: string | null) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
+  authInitialized: boolean;
   logout: () => void;
   refreshIdToken: () => Promise<string | null>;
 }
@@ -18,11 +19,13 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
     const savedRole = localStorage.getItem('role');
     return savedRole ? JSON.parse(savedRole) : null;
   });
-  
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     const authStatus = localStorage.getItem('isAuthenticated');
     return authStatus ? JSON.parse(authStatus) : false;
   });
+
+  const [authInitialized, setAuthInitialized] = useState<boolean>(false);
 
   const refreshIdToken = async (): Promise<string | null> => {
     try {
@@ -41,15 +44,31 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // User is logged in
+        const token = await user.getIdToken(true);
+        const role_name = getRoleFromCookies();
+        setIdTokenCookie(token, role_name);
+        setIsAuthenticated(true);
+      } else {
+        // User is not logged in
+        setIsAuthenticated(false);
+      }
+      setAuthInitialized(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (isAuthenticated) {
-      refreshIdToken()
       const refreshInterval = setInterval(async () => {
-         await refreshIdToken();
-      },   10 * 60 * 1000); 
+        await refreshIdToken();
+      }, 10 * 60 * 1000); // Refresh every 10 minutes
       return () => clearInterval(refreshInterval);
     }
   }, [isAuthenticated]);
-
 
   const handleSetRoleName = (role: string | null) => {
     setRoleName(role);
@@ -75,20 +94,20 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
     localStorage.removeItem('role');
     localStorage.removeItem('isAuthenticated');
-    //Clear any auth related cookies
     document.cookie = 'idToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     document.cookie = 'role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
   };
 
   return (
-    <UserRoleContext.Provider 
-      value={{ 
-        roleName, 
+    <UserRoleContext.Provider
+      value={{
+        roleName,
         setRoleName: handleSetRoleName,
         isAuthenticated,
         setIsAuthenticated: handleSetIsAuthenticated,
+        authInitialized,
         logout,
-        refreshIdToken
+        refreshIdToken,
       }}
     >
       {children}

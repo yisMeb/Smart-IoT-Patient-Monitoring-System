@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { User, LogOut, UserRoundPen } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const navItems = [
   { path: "/institutes/h-provider/", text: "Dashboard" },
@@ -64,14 +73,19 @@ export const Navigation = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="w-10 h-10 rounded-xl bg-white overflow-hidden">
-        <img
-          src="/thegirl.png"
-          alt="Profile"
-          className="w-full h-full object-cover"
-        />
-      </div>
+      <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <div className="w-10 h-10 rounded-xl bg-white overflow-hidden flex justify-center items-center cursor-pointer">
+                    <User />
+                </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="text-center">
+                <DropdownMenuLabel>Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem><UserRoundPen /> Profile</DropdownMenuItem>
+                <DropdownMenuItem><LogOut /> Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     </nav>
   );
 };

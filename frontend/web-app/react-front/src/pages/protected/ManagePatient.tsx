@@ -53,7 +53,7 @@ const ManagePatient: React.FC = () => {
   // Handle the logic for adding a patient
   const handleAddPatient = async () => {
     try {
-      const addedPatient = await addPatient(newPatient);
+      const addedPatient = await addPatient(navigate, newPatient);
       setPatients([...patients, addedPatient]);
       setIsModalOpen(false);
       setNewPatient({
@@ -75,7 +75,7 @@ const ManagePatient: React.FC = () => {
     if (!selectedPatient) return;
 
     try {
-      const updatedPatient = await updatePatient(selectedPatient.device_id, {
+      const updatedPatient = await updatePatient(navigate, selectedPatient.device_id, {
         name: selectedPatient.name,
         dob: selectedPatient.dob,
         contact_number: selectedPatient.contact_number,

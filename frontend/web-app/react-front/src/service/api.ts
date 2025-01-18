@@ -7,15 +7,11 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
-const All_PROFESSIONALS = import.meta.env
-  .VITE_API_GET_ALL_PROFESSIONALS as string;
+const All_PROFESSIONALS = import.meta.env.VITE_API_GET_ALL_PROFESSIONALS as string;
 const ALL_DEVICES = import.meta.env.VITE_API_GET_ALL_DEVICES as string;
-const UPDATE_PROFESSIONAL = import.meta.env
-  .VITE_API_UPDATE_PROFESSIONAL as string;
+const UPDATE_PROFESSIONAL = import.meta.env.VITE_API_UPDATE_PROFESSIONAL as string;
 const ADD_PROFESSIONAL = import.meta.env.VITE_API_ADD_PROFESSIONAL as string;
 
-const token = getIdTokenFromCookies();
-const role = getRoleFromCookies();
 interface Professional {
   professional_id: string;
   institution_id: string;
@@ -37,23 +33,33 @@ interface Patient {
   device_id: string;
 }
 
-export const fetchAllPatient = async (
-  navigate: ReturnType<typeof useNavigate>
-) => {
-  try {
-    if (!role || !token || isTokenExpired(token)) {
-      auth.signOut();
-      navigate("/login");
-      return;
-    }
-    const headers = {
+const checkAuthAndGetHeaders = (navigate: ReturnType<typeof useNavigate>) => {
+  const token = getIdTokenFromCookies();
+  const role = getRoleFromCookies();
+
+  if (!role || !token || isTokenExpired(token)) {
+    auth.signOut();
+    navigate("/login");
+    return null;
+  }
+
+  return {
+    headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
-    };
+    },
+    token,
+  };
+};
+
+export const fetchAllPatient = async (navigate: ReturnType<typeof useNavigate>) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
 
     const response = await fetch(ALL_PATIENT, {
       method: "GET",
-      headers,
+      headers: auth.headers,
     });
 
     if (!response.ok) {
@@ -67,23 +73,14 @@ export const fetchAllPatient = async (
   }
 };
 
-export const fetchAllProfessionals = async (
-  navigate: ReturnType<typeof useNavigate>
-) => {
+export const fetchAllProfessionals = async (navigate: ReturnType<typeof useNavigate>) => {
   try {
-    if (!role || !token || isTokenExpired(token)) {
-      auth.signOut();
-      navigate("/login");
-      return;
-    }
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
 
     const response = await fetch(All_PROFESSIONALS, {
       method: "GET",
-      headers,
+      headers: auth.headers,
     });
 
     if (!response.ok) {
@@ -97,23 +94,14 @@ export const fetchAllProfessionals = async (
   }
 };
 
-export const fetchAllDevices = async (
-  navigate: ReturnType<typeof useNavigate>
-) => {
+export const fetchAllDevices = async (navigate: ReturnType<typeof useNavigate>) => {
   try {
-    if (!role || !token || isTokenExpired(token)) {
-      auth.signOut();
-      navigate("/login");
-      return;
-    }
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
 
     const response = await fetch(ALL_DEVICES, {
       method: "GET",
-      headers,
+      headers: auth.headers,
     });
 
     if (!response.ok) {
@@ -128,17 +116,18 @@ export const fetchAllDevices = async (
 };
 
 export const updateProfessional = async (
+  navigate: ReturnType<typeof useNavigate>,
   professionalId: string,
-  updates: Partial<Professional> // Partial allows updating only specific fields
+  updates: Partial<Professional>
 ) => {
   try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
     const response = await fetch(`${UPDATE_PROFESSIONAL}/${professionalId}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updates), // Send the updates in the correct format
+      headers: auth.headers,
+      body: JSON.stringify(updates),
     });
 
     if (!response.ok) {
@@ -152,19 +141,22 @@ export const updateProfessional = async (
   }
 };
 
-export const addProfessional = async (professional: {
-  name: string;
-  specialization: string;
-  contact_number: string;
-  email: string;
-}) => {
+export const addProfessional = async (
+  navigate: ReturnType<typeof useNavigate>,
+  professional: {
+    name: string;
+    specialization: string;
+    contact_number: string;
+    email: string;
+  }
+) => {
   try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
     const response = await fetch(`${ADD_PROFESSIONAL}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: auth.headers,
       body: JSON.stringify(professional),
     });
 
@@ -180,22 +172,19 @@ export const addProfessional = async (professional: {
 };
 
 export const updatePatient = async (
+  navigate: ReturnType<typeof useNavigate>,
   professionalId: string,
-  updates: Partial<Patient> // Partial allows updating only specific fields
+  updates: Partial<Patient>
 ) => {
   try {
-    const response = await fetch(
-      //  `${UPDATE_PATIENT}/${patientId}`,
-      `${UPDATE_PROFESSIONAL}/${professionalId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updates), // Send the updates in the correct format
-      }
-    );
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
+    const response = await fetch(`${UPDATE_PROFESSIONAL}/${professionalId}`, {
+      method: "PUT",
+      headers: auth.headers,
+      body: JSON.stringify(updates),
+    });
 
     if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
@@ -208,28 +197,27 @@ export const updatePatient = async (
   }
 };
 
-export const addPatient = async (patient: {
-  name: string;
-  dob: string;
-  contact_number: string;
-  email: string;
-  status: string;
-  address: string;
-  device_id: string;
-}) => {
+export const addPatient = async (
+  navigate: ReturnType<typeof useNavigate>,
+  patient: {
+    name: string;
+    dob: string;
+    contact_number: string;
+    email: string;
+    status: string;
+    address: string;
+    device_id: string;
+  }
+) => {
   try {
-    const response = await fetch(
-      //`${ADD_PATIENT}`,
-      `${ADD_PROFESSIONAL}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(patient),
-      }
-    );
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
+    const response = await fetch(`${ADD_PROFESSIONAL}`, {
+      method: "POST",
+      headers: auth.headers,
+      body: JSON.stringify(patient),
+    });
 
     if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
