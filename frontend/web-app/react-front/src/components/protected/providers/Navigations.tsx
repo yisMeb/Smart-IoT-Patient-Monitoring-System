@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, LogOut, UserRoundPen } from "lucide-react";
 import {
@@ -10,6 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { auth } from "@/lib/firebaseConfig";
+import { clearCookies } from "@/lib/cookieUtils";
+import { useUserRole } from "@/context/UserRoleContext";
 
 const navItems = [
   { path: "/institutes/h-provider/", text: "Dashboard" },
@@ -20,7 +23,22 @@ const navItems = [
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const navigate = useNavigate();
+  const { setRoleName, setIsAuthenticated } = useUserRole();
+  
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      clearCookies();
+      setIsAuthenticated(false);  
+      setRoleName("");  
+      console.log("Logged out successfully");
+      navigate('/login');
+    } catch (error) {
+      console.error("Error during logout", error);
+    }
+  };
+  
   return (
     <nav className="relative flex items-center justify-between p-4 bg-transparent z-50">
       <div className="flex items-center">
@@ -83,7 +101,7 @@ export const Navigation = () => {
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem><UserRoundPen /> Profile</DropdownMenuItem>
-                <DropdownMenuItem><LogOut /> Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}><LogOut /> Logout</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     </nav>
