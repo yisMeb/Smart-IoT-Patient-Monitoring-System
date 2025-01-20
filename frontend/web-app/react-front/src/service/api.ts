@@ -61,23 +61,35 @@ interface Device {
   assigned_to: string;
 }
 
+const checkAuthAndGetHeaders = (navigate: ReturnType<typeof useNavigate>) => {
+  const token = getIdTokenFromCookies();
+  const role = getRoleFromCookies();
+
+  if (!role || !token || isTokenExpired(token)) {
+    auth.signOut();
+    navigate("/login");
+    return null;
+  }
+
+  return {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    token,
+  };
+};
+
 export const fetchAllPatient = async (
   navigate: ReturnType<typeof useNavigate>
 ) => {
   try {
-    if (!role || !token || isTokenExpired(token)) {
-      auth.signOut();
-      navigate("/login");
-      return;
-    }
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
 
     const response = await fetch(ALL_PATIENT, {
       method: "GET",
-      headers,
+      headers: auth.headers,
     });
 
     if (!response.ok) {
@@ -95,19 +107,12 @@ export const fetchAllProfessionals = async (
   navigate: ReturnType<typeof useNavigate>
 ) => {
   try {
-    if (!role || !token || isTokenExpired(token)) {
-      auth.signOut();
-      navigate("/login");
-      return;
-    }
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
 
     const response = await fetch(All_PROFESSIONALS, {
       method: "GET",
-      headers,
+      headers: auth.headers,
     });
 
     if (!response.ok) {
@@ -125,19 +130,12 @@ export const fetchAllDevices = async (
   navigate: ReturnType<typeof useNavigate>
 ) => {
   try {
-    if (!role || !token || isTokenExpired(token)) {
-      auth.signOut();
-      navigate("/login");
-      return;
-    }
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
 
     const response = await fetch(ALL_DEVICES, {
       method: "GET",
-      headers,
+      headers: auth.headers,
     });
 
     if (!response.ok) {
@@ -152,17 +150,18 @@ export const fetchAllDevices = async (
 };
 
 export const updateProfessional = async (
+  navigate: ReturnType<typeof useNavigate>,
   professionalId: string,
-  updates: Partial<Professional> // Partial allows updating only specific fields
+  updates: Partial<Professional>
 ) => {
   try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
     const response = await fetch(`${UPDATE_PROFESSIONAL}/${professionalId}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updates), // Send the updates in the correct format
+      headers: auth.headers,
+      body: JSON.stringify(updates),
     });
 
     if (!response.ok) {
@@ -176,21 +175,22 @@ export const updateProfessional = async (
   }
 };
 
-export const addProfessional = async (professional: {
-  institution_id: string;
-  name: string;
-  specialization: string;
-  contact_number: string;
-  email: string;
-}) => {
+export const addProfessional = async (
+  navigate: ReturnType<typeof useNavigate>,
+  professional: {
+    name: string;
+    specialization: string;
+    contact_number: string;
+    email: string;
+  }
+) => {
   try {
-    console.log(professional);
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
     const response = await fetch(`${ADD_PROFESSIONAL}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: auth.headers,
       body: JSON.stringify(professional),
     });
 
@@ -206,17 +206,18 @@ export const addProfessional = async (professional: {
 };
 
 export const updatePatient = async (
-  patient_id: string,
-  updates: Partial<Patient> // Partial allows updating only specific fields
+  navigate: ReturnType<typeof useNavigate>,
+  professionalId: string,
+  updates: Partial<Patient>
 ) => {
   try {
-    const response = await fetch(`${UPDATE_PATIENT}/${patient_id}`, {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
+    const response = await fetch(`${UPDATE_PROFESSIONAL}/${professionalId}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updates), // Send the updates in the correct format
+      headers: auth.headers,
+      body: JSON.stringify(updates),
     });
 
     if (!response.ok) {
@@ -230,24 +231,29 @@ export const updatePatient = async (
   }
 };
 
-export const addPatient = async (patient: {
-  name: string;
-  dob: string;
-  contact_number: string;
-  email: string;
-  status: string;
-  address: string;
-  professional_id: string;
-  institution_id: string;
-  device_id?: string;
-  oxygen_threshold?: number;
-  heartrate_threshold?: number;
-  temperature_threshold?: number;
-  oxygen_threshold_lower?: number;
-  heartrate_threshold_lower?: number;
-  temperature_threshold_lower?: number;
-}) => {
+export const addPatient = async (
+  navigate: ReturnType<typeof useNavigate>,
+  patient: {
+    name: string;
+    dob: string;
+    contact_number: string;
+    email: string;
+    status: string;
+    address: string;
+    professional_id: string;
+    institution_id: string;
+    device_id?: string;
+    oxygen_threshold?: number;
+    heartrate_threshold?: number;
+    temperature_threshold?: number;
+    oxygen_threshold_lower?: number;
+    heartrate_threshold_lower?: number;
+    temperature_threshold_lower?: number;
+  }
+) => {
   try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
     const patientData = {
       ...patient,
       device_id: patient.device_id || "Unassigned",
@@ -259,13 +265,10 @@ export const addPatient = async (patient: {
       temperature_threshold_lower: patient.temperature_threshold_lower || 0,
     };
     console.log(patientData);
-    const response = await fetch(`${ADD_PATIENT}`, {
+    const response = await fetch(`${ADD_PROFESSIONAL}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(patientData), // Send the complete patient data
+      headers: auth.headers,
+      body: JSON.stringify(patient),
     });
     console.log(response);
     if (!response.ok) {

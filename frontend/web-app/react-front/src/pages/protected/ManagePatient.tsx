@@ -119,7 +119,7 @@ const ManagePatient: React.FC = () => {
         ...newPatient,
         institution_id: roleSpecificId,
       };
-      const addedPatient = await addPatient(patientData);
+      const addedPatient = await addPatient(navigate, patientData);
       setPatients([...patients, addedPatient]);
 
       setIsModalOpen(false);
@@ -150,15 +150,19 @@ const ManagePatient: React.FC = () => {
     if (!selectedPatient) return;
 
     try {
-      const updatedPatient = await updatePatient(selectedPatient.device_id, {
-        name: selectedPatient.name,
-        dob: selectedPatient.dob,
-        contact_number: selectedPatient.contact_number,
-        email: selectedPatient.email,
-        status: selectedPatient.status,
-        address: selectedPatient.address,
-        device_id: selectedPatient.device_id,
-      });
+      const updatedPatient = await updatePatient(
+        navigate,
+        selectedPatient.device_id,
+        {
+          name: selectedPatient.name,
+          dob: selectedPatient.dob,
+          contact_number: selectedPatient.contact_number,
+          email: selectedPatient.email,
+          status: selectedPatient.status,
+          address: selectedPatient.address,
+          device_id: selectedPatient.device_id,
+        }
+      );
       setPatients(
         patients.map((patient) =>
           patient.institution_id === updatedPatient.institution_id

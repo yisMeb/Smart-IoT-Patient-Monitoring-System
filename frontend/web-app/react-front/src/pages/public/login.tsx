@@ -85,7 +85,7 @@ export default function Login() {
     checkAllFieldsFilled();
   }, [checkAllFieldsFilled]);
 
-  const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
@@ -227,94 +227,103 @@ export default function Login() {
               <span className="block sm:inline">{errorMessage}</span>
             </div>
           )}
-
-          <div className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                checkAllFieldsFilled();
+          {/* form part */}
+          <div>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleLogin(e);
               }}
-              required
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
-            />
-
-            <div className="relative">
+            >
               <input
-                type={passwordVisible ? "text" : "password"}
-                placeholder="Password"
-                value={password}
+                type="email"
+                placeholder="Email"
+                value={email}
                 onChange={(e) => {
-                  setPassword(e.target.value);
+                  setEmail(e.target.value);
                   checkAllFieldsFilled();
                 }}
                 required
                 className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
+                autoComplete="username"
               />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-                onClick={() => setPasswordVisible(!passwordVisible)}
-              >
-                {passwordVisible ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2">
+              <div className="relative">
                 <input
-                  type="checkbox"
-                  checked={acceptTerms}
+                  type={passwordVisible ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
                   onChange={(e) => {
-                    setAcceptTerms(e.target.checked);
+                    setPassword(e.target.value);
                     checkAllFieldsFilled();
                   }}
-                  className="h-4 w-4 rounded border-gray-300"
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
+                  autoComplete="current-password"
                 />
-                <span className="text-gray-600">
-                  I Accept the{" "}
-                  <a href="/terms" className="text-[#0066FF]">
-                    Terms
-                  </a>
-                </span>
-              </label>
-              <a href="/forgot-password" className="text-[#0066FF]">
-                Forgot Password?
-              </a>
-            </div>
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                >
+                  {passwordVisible ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
 
-            <button
-              onClick={handleLogin}
-              disabled={isLoading || !allFieldsFilled}
-              className={`w-full rounded-lg bg-[#0066FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0066FF]/90 ${
-                isLoading || !allFieldsFilled
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                  <span>Please wait...</span>
-                </div>
-              ) : (
-                "Login"
-              )}
-            </button>
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(e) => {
+                      setAcceptTerms(e.target.checked);
+                      checkAllFieldsFilled();
+                    }}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <span className="text-gray-600">
+                    I Accept the{" "}
+                    <a href="/terms" className="text-[#0066FF]">
+                      Terms
+                    </a>
+                  </span>
+                </label>
+                <a href="/forgot-password" className="text-[#0066FF]">
+                  Forgot Password?
+                </a>
+              </div>
 
-            <p className="text-center text-sm text-gray-500">
-              Don't have an Account?{" "}
-              <a href="/signup" className="text-[#0066FF]">
-                Sign up
-              </a>
-            </p>
+              <button
+                type="submit"
+                disabled={isLoading || !allFieldsFilled}
+                className={`w-full rounded-lg bg-[#0066FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0066FF]/90 ${
+                  isLoading || !allFieldsFilled
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                    <span>Please wait...</span>
+                  </div>
+                ) : (
+                  "Login"
+                )}
+              </button>
+            </form>
           </div>
+
+          <p className="text-center text-sm text-gray-500">
+            Don't have an Account?{" "}
+            <a href="/signup" className="text-[#0066FF]">
+              Sign up
+            </a>
+          </p>
         </div>
       </div>
     </div>

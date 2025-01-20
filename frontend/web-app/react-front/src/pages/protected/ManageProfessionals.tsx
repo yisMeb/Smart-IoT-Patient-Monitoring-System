@@ -16,7 +16,7 @@ interface Professional {
   specialization: string;
   contact_number: string;
   email: string;
-  created_at: string; // Assuming created_at is returned as a string from the API
+  created_at: string;
 }
 
 const ManageProfessionals: React.FC = () => {
@@ -56,50 +56,63 @@ const ManageProfessionals: React.FC = () => {
 
   // Handle adding a new professional
   const handleAddProfessional = async () => {
-    setIsAdding(true); // Start loading
+    setIsAdding(true);
+    setError("");
+
     const roleSpecificId = getRoleIDFromCookie();
-    console.log(roleSpecificId);
-    if (roleSpecificId) {
-      try {
-        const professionalToAdd = {
-          ...newProfessional,
-          institution_id: roleSpecificId,
-        };
-        console.log(professionalToAdd);
-        await addProfessional(professionalToAdd);
+    if (!roleSpecificId) {
+      setError("Institution ID is missing. Please try again.");
+      setIsAdding(false);
+      return;
+    }
 
-        const updatedData = await fetchAllProfessionals(navigate);
-        setProfessionals(updatedData);
+    try {
+      const professionalToAdd = {
+        ...newProfessional,
+        institution_id: roleSpecificId,
+      };
+      console.log("Adding professional:", professionalToAdd);
 
-        setIsModalOpen(false);
-        setNewProfessional({
-          institution_id: roleSpecificId,
-          name: "",
-          specialization: "",
-          contact_number: "",
-          email: "",
-        });
-      } catch (error) {
-        console.error("Error adding professional:", error);
-        setError("Failed to add professional. Please try again.");
-      } finally {
-        setIsAdding(false);
-      }
+      const addedProfessional = await addProfessional(
+        navigate,
+        professionalToAdd
+      );
+      console.log("Professional added:", addedProfessional);
+
+      const updatedData = await fetchAllProfessionals(navigate);
+      setProfessionals(updatedData);
+
+      setIsModalOpen(false);
+      setNewProfessional({
+        institution_id: roleSpecificId,
+        name: "",
+        specialization: "",
+        contact_number: "",
+        email: "",
+      });
+    } catch (error) {
+      console.error("Error adding professional:", error);
+      setError("Failed to add professional. Please try again.");
+    } finally {
+      setIsAdding(false);
     }
   };
 
   // Handle editing a professional
   const handleEditProfessional = async () => {
     if (selectedProfessional) {
-      setIsEditing(true); // Start loading
+      setIsEditing(true);
       try {
-        // Call the updateProfessional function
-        await updateProfessional(selectedProfessional.professional_id, {
-          name: selectedProfessional.name,
-          specialization: selectedProfessional.specialization,
-          contact_number: selectedProfessional.contact_number,
-          email: selectedProfessional.email,
-        });
+        await updateProfessional(
+          navigate,
+          selectedProfessional.professional_id,
+          {
+            name: selectedProfessional.name,
+            specialization: selectedProfessional.specialization,
+            contact_number: selectedProfessional.contact_number,
+            email: selectedProfessional.email,
+          }
+        );
 
         // Refresh the list of professionals
         const updatedData = await fetchAllProfessionals(navigate);
