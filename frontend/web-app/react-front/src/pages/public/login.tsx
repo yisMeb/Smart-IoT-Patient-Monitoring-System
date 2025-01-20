@@ -120,7 +120,6 @@ export default function Login() {
         await signInWithCustomToken(auth, customToken);
 
         const currentUser = auth.currentUser;
-        console.log(data.user_data);
         if (currentUser) {
           const idToken = await currentUser.getIdToken();
           const { user_id, user_role, role_specific_id } = data.user_data;

@@ -16,7 +16,7 @@ const getRoleIDFromCookie = (): string | null => {
   const cookieArray = decodedCookie.split(";");
 
   for (let i = 0; i < cookieArray.length; i++) {
-    let cookie = cookieArray[i].trim();
+    const cookie = cookieArray[i].trim();
     if (cookie.startsWith(name)) {
       return cookie.substring(name.length, cookie.length);
     }
