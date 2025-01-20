@@ -1,42 +1,50 @@
-import { useState, useEffect, useCallback  } from 'react'
-import { Check, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { sendEmailVerification, signInWithCustomToken } from 'firebase/auth'
-import { auth } from '../../lib/firebaseConfig'
-import { getIdTokenFromCookies, getRoleFromCookies, isTokenExpired, setIdTokenCookie } from "../../lib/cookieUtils";
-import { useUserRole } from '../../context/UserRoleContext';
+import { useState, useEffect, useCallback } from "react";
+import { Check, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { sendEmailVerification, signInWithCustomToken } from "firebase/auth";
+import { auth } from "../../lib/firebaseConfig";
+import {
+  getIdTokenFromCookies,
+  getRoleFromCookies,
+  isTokenExpired,
+  setIdTokenCookie,
+} from "../../lib/cookieUtils";
+import { useUserRole } from "../../context/UserRoleContext";
 
 export default function Login() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [acceptTerms, setAcceptTerms] = useState(false)
-  const [passwordVisible, setPasswordVisible] = useState(false)
-  const[role, setRole] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [allFieldsFilled, setAllFieldsFilled] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [role, setRole] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [allFieldsFilled, setAllFieldsFilled] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { setRoleName, setIsAuthenticated } = useUserRole();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleAuthState = async () => {
       const role = getRoleFromCookies();
       const idToken = getIdTokenFromCookies();
-      if (!role || !idToken || isTokenExpired(idToken)){
-            auth.signOut();
-            return;
+      if (!role || !idToken || isTokenExpired(idToken)) {
+        auth.signOut();
+        return;
       }
-     const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      const unsubscribe = auth.onAuthStateChanged(async (user) => {
         if (user) {
           setIsLoading(true);
           try {
-            const response = await fetch(`${import.meta.env.VITE_API_GET_USER_DATA}/${user.email}`, {
-              method: "GET",
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`
-              },
-            });
+            const response = await fetch(
+              `${import.meta.env.VITE_API_GET_USER_DATA}/${user.email}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${idToken}`,
+                },
+              }
+            );
             if (!response.ok) {
               console.log(`HTTP error! status: ${response.status}`);
             }
@@ -44,10 +52,10 @@ export default function Login() {
             const user_role = data.user_role;
 
             if (user_role === "institution") {
-                navigate("/institutes/h-provider");
-             }else if (user_role === "professionals") {
-                navigate("/professionals/dashboard");
-             }
+              navigate("/institutes/h-provider");
+            } else if (user_role === "professionals") {
+              navigate("/professionals/dashboard");
+            }
           } catch (error) {
             console.error("Error fetching user data: try logging in", error);
           } finally {
@@ -55,26 +63,23 @@ export default function Login() {
           }
         }
       });
-  
+
       return () => unsubscribe();
     };
-  
+
     handleAuthState();
   }, [navigate]);
 
-
   const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const checkAllFieldsFilled = useCallback(() => {
     setAllFieldsFilled(
-      isValidEmail(email) &&
-      password.trim() !== '' &&
-      acceptTerms
+      isValidEmail(email) && password.trim() !== "" && acceptTerms
     );
-  }, [email, password, acceptTerms]);  
+  }, [email, password, acceptTerms]);
 
   useEffect(() => {
     checkAllFieldsFilled();
@@ -85,72 +90,79 @@ export default function Login() {
     setIsLoading(true);
     setErrorMessage("");
     if (!isValidEmail(email)) {
-        setErrorMessage('Please enter a valid email address.')
-        setIsLoading(false);
-        return
+      setErrorMessage("Please enter a valid email address.");
+      setIsLoading(false);
+      return;
     }
     try {
-        const response = await fetch(import.meta.env.VITE_API_LOGIN, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
-        });
-        if (!response.ok) {
-            setIsLoading(false);
-            if (response.status === 401) {
-                setErrorMessage("Incorrect email or password.");
-            } else if (response.status === 500) {
-                setErrorMessage("Server error. Please try again later.");
-            } else {
-                const data = await response.json();
-                setErrorMessage(data.message || "Failed to log in. Please try again.");
-            }
-        } else {
-            const data = await response.json();
-            const customToken = data.custom_token;
-            await signInWithCustomToken(auth, customToken);
-
-            const currentUser = auth.currentUser;
-            if(currentUser){
-                const idToken = await currentUser.getIdToken();
-                const { user_id, user_role } = data.user_data;
-                const verificationStatus = data.verification_status;
-                
-                setIdTokenCookie(idToken, user_role);
-                setIsAuthenticated(true);
-                setRoleName(user_role);
-
-                if (!verificationStatus) {
-                    await sendEmailVerification(currentUser);
-                    navigate("/verify-email", { state: { email, user_id } });
-                } else {
-                    if (user_role === "institution") {
-                        navigate("/institutes/h-provider");
-                    } else if (user_role === "professionals") {
-                        navigate("/professionals/dashboard");
-                    } else if(user_role === "admin") {
-                        navigate("/admin");
-                    }
-                }
-                setRole(user_role);
-                console.log(role)
-            } else {
-                setErrorMessage("User is not signed in.");
-            }
-        }
-    } catch (error) {
-        if (error instanceof TypeError) {
-            setErrorMessage("Network error. Please check your connection and try again.");
-        } else {
-            setErrorMessage("An unexpected error occurred. Please try again later.");
-        }
-        console.log(error);
-    } finally {
+      const response = await fetch(import.meta.env.VITE_API_LOGIN, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) {
         setIsLoading(false);
+        if (response.status === 401) {
+          setErrorMessage("Incorrect email or password.");
+        } else if (response.status === 500) {
+          setErrorMessage("Server error. Please try again later.");
+        } else {
+          const data = await response.json();
+          setErrorMessage(
+            data.message || "Failed to log in. Please try again."
+          );
+        }
+      } else {
+        const data = await response.json();
+        const customToken = data.custom_token;
+        await signInWithCustomToken(auth, customToken);
+
+        const currentUser = auth.currentUser;
+        console.log(data.user_data);
+        if (currentUser) {
+          const idToken = await currentUser.getIdToken();
+          const { user_id, user_role, role_specific_id } = data.user_data;
+          const verificationStatus = data.verification_status;
+
+          setIdTokenCookie(idToken, user_role, role_specific_id);
+          setIsAuthenticated(true);
+          setRoleName(user_role);
+
+          if (!verificationStatus) {
+            await sendEmailVerification(currentUser);
+            navigate("/verify-email", { state: { email, user_id } });
+          } else {
+            if (user_role === "institution") {
+              navigate("/institutes/h-provider");
+            } else if (user_role === "professionals") {
+              navigate("/professionals/dashboard");
+            } else if (user_role === "admin") {
+              navigate("/admin");
+            }
+          }
+          setRole(user_role);
+          console.log(role);
+        } else {
+          setErrorMessage("User is not signed in.");
+        }
+      }
+    } catch (error) {
+      if (error instanceof TypeError) {
+        setErrorMessage(
+          "Network error. Please check your connection and try again."
+        );
+      } else {
+        setErrorMessage(
+          "An unexpected error occurred. Please try again later."
+        );
+      }
+      console.log(error);
+    } finally {
+      setIsLoading(false);
     }
-};
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -163,8 +175,12 @@ export default function Login() {
               </div>
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-medium text-white">Account Information</h3>
-              <p className="text-sm text-white/60">Setup your account information</p>
+              <h3 className="text-xl font-medium text-white">
+                Account Information
+              </h3>
+              <p className="text-sm text-white/60">
+                Setup your account information
+              </p>
             </div>
             <div className="absolute left-4 top-10 bottom-0 border-l-2 border-dashed border-white/20 z-0"></div>
           </div>
@@ -184,19 +200,30 @@ export default function Login() {
 
         <div className="mt-auto">
           <div className="flex space-x-6 text-sm text-white/60">
-            <a href="/terms" className="hover:text-white">Terms</a>
-            <a href="/policy" className="hover:text-white">Policies</a>
-            <a href="/contact" className="hover:text-white">Contact Us</a>
+            <a href="/terms" className="hover:text-white">
+              Terms
+            </a>
+            <a href="/policy" className="hover:text-white">
+              Policies
+            </a>
+            <a href="/contact" className="hover:text-white">
+              Contact Us
+            </a>
           </div>
         </div>
       </div>
 
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-[440px] space-y-6">
-          <h1 className="text-3xl font-semibold tracking-tight text-center">Welcome back</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-center">
+            Welcome back
+          </h1>
 
           {errorMessage && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+              role="alert"
+            >
               <span className="block sm:inline">{errorMessage}</span>
             </div>
           )}
@@ -207,8 +234,8 @@ export default function Login() {
               placeholder="Email"
               value={email}
               onChange={(e) => {
-                setEmail(e.target.value)
-                checkAllFieldsFilled()
+                setEmail(e.target.value);
+                checkAllFieldsFilled();
               }}
               required
               className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
@@ -220,8 +247,8 @@ export default function Login() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => {
-                  setPassword(e.target.value)
-                  checkAllFieldsFilled()
+                  setPassword(e.target.value);
+                  checkAllFieldsFilled();
                 }}
                 required
                 className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-[#0066FF] focus:outline-none"
@@ -241,43 +268,55 @@ export default function Login() {
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => {
-                    setAcceptTerms(e.target.checked)
-                    checkAllFieldsFilled()
+                    setAcceptTerms(e.target.checked);
+                    checkAllFieldsFilled();
                   }}
                   className="h-4 w-4 rounded border-gray-300"
                 />
                 <span className="text-gray-600">
-                  I Accept the{' '}
-                  <a href="/terms" className="text-[#0066FF]">Terms</a>
+                  I Accept the{" "}
+                  <a href="/terms" className="text-[#0066FF]">
+                    Terms
+                  </a>
                 </span>
               </label>
-              <a href="/forgot-password" className="text-[#0066FF]">Forgot Password?</a>
+              <a href="/forgot-password" className="text-[#0066FF]">
+                Forgot Password?
+              </a>
             </div>
 
-            <button 
+            <button
               onClick={handleLogin}
               disabled={isLoading || !allFieldsFilled}
-              className={`w-full rounded-lg bg-[#0066FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0066FF]/90 ${isLoading || !allFieldsFilled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`w-full rounded-lg bg-[#0066FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0066FF]/90 ${
+                isLoading || !allFieldsFilled
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <Loader2 className="animate-spin h-5 w-5 mr-2" />
                   <span>Please wait...</span>
                 </div>
-              ) : 'Login'}
+              ) : (
+                "Login"
+              )}
             </button>
 
             <p className="text-center text-sm text-gray-500">
-              Don't have an Account?{' '}
-              <a href="/signup" className="text-[#0066FF]">Sign up</a>
+              Don't have an Account?{" "}
+              <a href="/signup" className="text-[#0066FF]">
+                Sign up
+              </a>
             </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

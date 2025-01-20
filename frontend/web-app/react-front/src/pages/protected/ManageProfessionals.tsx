@@ -7,9 +7,8 @@ import {
   addProfessional,
 } from "@/service/api";
 import { useNavigate } from "react-router-dom";
-import Loading from "../../components/ui/loading"; // Import the Loading component
-
-// Define the type for a professional object based on the database model
+import Loading from "../../components/ui/loading";
+import { getRoleIDFromCookie } from "../../lib/cookieUtils";
 interface Professional {
   professional_id: string;
   institution_id: string;
@@ -29,6 +28,7 @@ const ManageProfessionals: React.FC = () => {
   const [selectedProfessional, setSelectedProfessional] =
     useState<Professional | null>(null);
   const [newProfessional, setNewProfessional] = useState({
+    institution_id: "",
     name: "",
     specialization: "",
     contact_number: "",
@@ -57,26 +57,34 @@ const ManageProfessionals: React.FC = () => {
   // Handle adding a new professional
   const handleAddProfessional = async () => {
     setIsAdding(true); // Start loading
-    try {
-      const Data = await addProfessional(newProfessional);
+    const roleSpecificId = getRoleIDFromCookie();
+    console.log(roleSpecificId);
+    if (roleSpecificId) {
+      try {
+        const professionalToAdd = {
+          ...newProfessional,
+          institution_id: roleSpecificId,
+        };
+        console.log(professionalToAdd);
+        await addProfessional(professionalToAdd);
 
-      // Refresh the list of professionals
-      const updatedData = await fetchAllProfessionals(navigate);
-      setProfessionals(updatedData);
+        const updatedData = await fetchAllProfessionals(navigate);
+        setProfessionals(updatedData);
 
-      // Close the modal and reset the form
-      setIsModalOpen(false);
-      setNewProfessional({
-        name: "",
-        specialization: "",
-        contact_number: "",
-        email: "",
-      });
-    } catch (error) {
-      console.error("Error adding professional:", error);
-      setError("Failed to add professional. Please try again.");
-    } finally {
-      setIsAdding(false); // Stop loading
+        setIsModalOpen(false);
+        setNewProfessional({
+          institution_id: roleSpecificId,
+          name: "",
+          specialization: "",
+          contact_number: "",
+          email: "",
+        });
+      } catch (error) {
+        console.error("Error adding professional:", error);
+        setError("Failed to add professional. Please try again.");
+      } finally {
+        setIsAdding(false);
+      }
     }
   };
 

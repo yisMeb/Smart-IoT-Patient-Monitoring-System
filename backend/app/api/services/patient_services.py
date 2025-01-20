@@ -21,22 +21,46 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
         formatted_phone_number = validate_phone_number(patient.contact_number)
        
         query = """
-        INSERT INTO public.patients (institution_id, name, dob, contact_number, email, address, device_id, created_at, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING patient_id, institution_id
-        """
+                INSERT INTO public.patients (
+                    institution_id, 
+                    name, 
+                    dob, 
+                    contact_number, 
+                    email, 
+                    address, 
+                    created_at,
+                    device_id, 
+                    status, 
+                    oxygen_threshold, 
+                    heartrate_threshold, 
+                    temperature_threshold, 
+                    oxygen_threshold_lower, 
+                    heartrate_threshold_lower, 
+                    temperature_threshold_lower, 
+                    professional_id,   
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                RETURNING patient_id, institution_id
+            """
         record = await db.fetchrow(
             query,
             patient.institution_id,
-            patient.name,
-            patient.dob,
-            formatted_phone_number,
-            patient.email,
-            patient.address,
-            patient.device_id,
+            patient.name, 
+            patient.dob, 
+            formatted_phone_number, 
+            patient.email, 
+            patient.address, 
             current_date,
-            patient.status
-        )
+            patient.device_id, 
+            patient.status, 
+            patient.oxygen_threshold, 
+            patient.heartrate_threshold,  
+            patient.temperature_threshold,
+            patient.oxygen_threshold_lower, 
+            patient.heartrate_threshold_lower, 
+            patient.temperature_threshold_lower,  
+            patient.professional_id
+            )
 
         if not record:
             raise HTTPException(status_code=500, detail="Failed to insert patient data")
@@ -47,12 +71,12 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
         SET is_assigned = TRUE, assigned_to = $1
         WHERE deviceid = $2
         """
-        await db.execute(update_query, record["patient_id"], patient.device_id)
+        #await db.execute(update_query, record["patient_id"], patient.device_id)
         
-        return {
-            "patient_id": record["patient_id"],
-            "institution_id": record["institution_id"],
-        }
+       # return {
+       #     "patient_id": record["patient_id"],
+       #     "institution_id": record["institution_id"],
+       # }
     
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
