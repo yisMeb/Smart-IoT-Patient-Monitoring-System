@@ -9,6 +9,7 @@ import ManagePatient from "./pages/protected/ManagePatient";
 import ManageDevices from "./pages/protected/ManageDevices";
 import ProtectedRoute from "./context/ProtectedRoute";
 import ManageProfessionals from "./pages/protected/ManageProfessionals";
+import Profile from "./pages/protected/Profile";
 
 function App() {
   return (
@@ -52,6 +53,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="institution">
                 <ManageDevices/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/institutes/h-provider/profile"
+            element={
+              <ProtectedRoute requiredRole="institution">
+                <Profile/>
               </ProtectedRoute>
             }
           />

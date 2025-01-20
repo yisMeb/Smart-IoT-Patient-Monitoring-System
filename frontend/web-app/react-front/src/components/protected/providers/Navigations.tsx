@@ -100,7 +100,7 @@ export const Navigation = () => {
             <DropdownMenuContent className="text-center">
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem><UserRoundPen /> Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/institutes/h-provider/profile')}><UserRoundPen /> Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}><LogOut /> Logout</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
