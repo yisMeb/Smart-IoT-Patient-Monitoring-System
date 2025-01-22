@@ -73,10 +73,10 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
         """
         #await db.execute(update_query, record["patient_id"], patient.device_id)
         
-       # return {
-       #     "patient_id": record["patient_id"],
-       #     "institution_id": record["institution_id"],
-       # }
+        #return {
+        #   "patient_id": record["patient_id"],
+        #    "institution_id": record["institution_id"],
+        #}
     
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
@@ -101,15 +101,78 @@ async def read_all_patients_service(db: asyncpg.Connection):
     return patients
 
 async def update_patient_service(patient_id: int, patient: PatientUpdate, db: asyncpg.Connection):
-    query = """
-    UPDATE patients
-    SET name = $1, dob = $2, contact_number = $3, email = $4, address = $5, status = $7
-    WHERE patient_id = $6
-    RETURNING patient_id, institution_id, name, dob, contact_number, email, address, created_at, status
-    """
-    values = (patient.name, patient.dob, patient.contact_number, patient.address, patient.status, patient_id)
-    patient_record = await db.fetchrow(query, *values)
-    return patient_record
+    try:
+        validate_input({
+            "name": patient.name,
+            "email": patient.email,
+            "address": patient.address
+        })
+        formatted_phone_number = validate_phone_number(patient.contact_number)
+        
+        query = """
+        UPDATE public.patients
+        SET 
+            name = $1, 
+            dob = $2, 
+            contact_number = $3, 
+            email = $4, 
+            address = $5, 
+            status = $6,
+            oxygen_threshold = $7,
+            heartrate_threshold = $8,
+            temperature_threshold = $9,
+            oxygen_threshold_lower = $10,
+            heartrate_threshold_lower = $11,
+            temperature_threshold_lower = $12,
+            professional_id = $13
+        WHERE patient_id = $14
+        RETURNING 
+            patient_id, 
+            institution_id, 
+            name, 
+            dob, 
+            contact_number, 
+            email, 
+            address, 
+            created_at, 
+            status,
+            oxygen_threshold,
+            heartrate_threshold,
+            temperature_threshold,
+            oxygen_threshold_lower,
+            heartrate_threshold_lower,
+            temperature_threshold_lower,
+            professional_id
+        """
+        
+        values = (
+            patient.name, 
+            patient.dob, 
+            formatted_phone_number, 
+            patient.email, 
+            patient.address, 
+            patient.status,
+            patient.oxygen_threshold,
+            patient.heartrate_threshold,
+            patient.temperature_threshold,
+            patient.oxygen_threshold_lower,
+            patient.heartrate_threshold_lower,
+            patient.temperature_threshold_lower,
+            patient.professional_id,
+            patient_id
+        )
+        
+        patient_record = await db.fetchrow(query, *values)
+        
+        if not patient_record:
+            raise HTTPException(status_code=404, detail="Patient not found")
+        
+        return patient_record
+    
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
 async def delete_patient_service(patient_id: int, db: asyncpg.Connection):
     query = """

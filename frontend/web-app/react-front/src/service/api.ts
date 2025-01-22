@@ -22,7 +22,7 @@ const ADD_DEVICE = import.meta.env.VITE_API_ADD_DEVICE as string;
 const UPDATE_DEVICE = import.meta.env.VITE_API_UPDATE_DEVICE as string;
 
 const token = getIdTokenFromCookies();
-const role = getRoleFromCookies();
+//const role = getRoleFromCookies();
 //const roleSpecificId = getRoleIDFromCookie();
 interface Professional {
   professional_id: string;
@@ -214,7 +214,7 @@ export const updatePatient = async (
     const auth = checkAuthAndGetHeaders(navigate);
     if (!auth) return;
 
-    const response = await fetch(`${UPDATE_PROFESSIONAL}/${professionalId}`, {
+    const response = await fetch(`${UPDATE_PATIENT}/${professionalId}`, {
       method: "PUT",
       headers: auth.headers,
       body: JSON.stringify(updates),
@@ -265,7 +265,7 @@ export const addPatient = async (
       temperature_threshold_lower: patient.temperature_threshold_lower || 0,
     };
     console.log(patientData);
-    const response = await fetch(`${ADD_PROFESSIONAL}`, {
+    const response = await fetch(`${ADD_PATIENT}`, {
       method: "POST",
       headers: auth.headers,
       body: JSON.stringify(patient),
