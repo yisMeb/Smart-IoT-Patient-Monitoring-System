@@ -60,3 +60,25 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db:  asyncpg.Con
         raise HTTPException(status_code=401, detail="Invalid token.")
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Could not validate credentials: {str(e)}")
+    
+    
+async def create_firebase_user(email):
+    try:
+        # Create a new user with a temporary password
+        user_data = {
+            'email': email,
+            'password': 'Password123',
+        }
+        
+        firebase_user = auth.create_user(**user_data)
+        
+        return firebase_user
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create user in Firebase: {str(e)}")
+    
+async def generate_password_reset_email(email):
+    try:
+       return auth.generate_password_reset_link(email)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending password reset email: {str(e)}")
+    
