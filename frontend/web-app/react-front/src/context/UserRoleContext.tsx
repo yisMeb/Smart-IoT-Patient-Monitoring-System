@@ -1,6 +1,6 @@
 import React, { useEffect, createContext, useContext, useState } from 'react';
 import { auth } from '../lib/firebaseConfig'; 
-import { setIdTokenCookie, getRoleFromCookies } from '../lib/cookieUtils';
+import { setIdTokenCookie, getRoleFromCookies, getRoleIDFromCookie } from '../lib/cookieUtils';
 
 interface UserRoleContextType {
   roleName: string | null;
@@ -33,7 +33,8 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
       if (currentUser) {
         const newIdToken = await currentUser.getIdToken(true);
         const role_name = getRoleFromCookies();
-        setIdTokenCookie(newIdToken, role_name);
+        const role_specific_id = getRoleIDFromCookie() || '';
+        setIdTokenCookie(newIdToken, role_name, role_specific_id);
         return newIdToken;
       }
       return null;
@@ -49,7 +50,8 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
         // User is logged in
         const token = await user.getIdToken(true);
         const role_name = getRoleFromCookies();
-        setIdTokenCookie(token, role_name);
+        const role_specific_id = getRoleIDFromCookie() || '';
+        setIdTokenCookie(token, role_name, role_specific_id);
         setIsAuthenticated(true);
       } else {
         // User is not logged in

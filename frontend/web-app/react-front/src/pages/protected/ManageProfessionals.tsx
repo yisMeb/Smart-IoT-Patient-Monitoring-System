@@ -7,9 +7,8 @@ import {
   addProfessional,
 } from "@/service/api";
 import { useNavigate } from "react-router-dom";
-import Loading from "../../components/ui/loading"; // Import the Loading component
-
-// Define the type for a professional object based on the database model
+import Loading from "../../components/ui/loading";
+import { getRoleIDFromCookie } from "../../lib/cookieUtils";
 interface Professional {
   professional_id: string;
   institution_id: string;
@@ -17,7 +16,7 @@ interface Professional {
   specialization: string;
   contact_number: string;
   email: string;
-  created_at: string; // Assuming created_at is returned as a string from the API
+  created_at: string;
 }
 
 const ManageProfessionals: React.FC = () => {
@@ -29,6 +28,7 @@ const ManageProfessionals: React.FC = () => {
   const [selectedProfessional, setSelectedProfessional] =
     useState<Professional | null>(null);
   const [newProfessional, setNewProfessional] = useState({
+    institution_id: "",
     name: "",
     specialization: "",
     contact_number: "",
@@ -56,18 +56,35 @@ const ManageProfessionals: React.FC = () => {
 
   // Handle adding a new professional
   const handleAddProfessional = async () => {
-    setIsAdding(true); // Start loading
-    try {
-      const Data = await addProfessional(navigate, newProfessional);
+    setIsAdding(true);
+    setError("");
 
-      console.log(Data)
-      // Refresh the list of professionals
+    const roleSpecificId = getRoleIDFromCookie();
+    if (!roleSpecificId) {
+      setError("Institution ID is missing. Please try again.");
+      setIsAdding(false);
+      return;
+    }
+
+    try {
+      const professionalToAdd = {
+        ...newProfessional,
+        institution_id: roleSpecificId,
+      };
+      console.log("Adding professional:", professionalToAdd);
+
+      const addedProfessional = await addProfessional(
+        navigate,
+        professionalToAdd
+      );
+      console.log("Professional added:", addedProfessional);
+
       const updatedData = await fetchAllProfessionals(navigate);
       setProfessionals(updatedData);
 
-      // Close the modal and reset the form
       setIsModalOpen(false);
       setNewProfessional({
+        institution_id: roleSpecificId,
         name: "",
         specialization: "",
         contact_number: "",
@@ -77,22 +94,25 @@ const ManageProfessionals: React.FC = () => {
       console.error("Error adding professional:", error);
       setError("Failed to add professional. Please try again.");
     } finally {
-      setIsAdding(false); // Stop loading
+      setIsAdding(false);
     }
   };
 
   // Handle editing a professional
   const handleEditProfessional = async () => {
     if (selectedProfessional) {
-      setIsEditing(true); // Start loading
+      setIsEditing(true);
       try {
-        // Call the updateProfessional function
-        await updateProfessional(navigate, selectedProfessional.professional_id, {
-          name: selectedProfessional.name,
-          specialization: selectedProfessional.specialization,
-          contact_number: selectedProfessional.contact_number,
-          email: selectedProfessional.email,
-        });
+        await updateProfessional(
+          navigate,
+          selectedProfessional.professional_id,
+          {
+            name: selectedProfessional.name,
+            specialization: selectedProfessional.specialization,
+            contact_number: selectedProfessional.contact_number,
+            email: selectedProfessional.email,
+          }
+        );
 
         // Refresh the list of professionals
         const updatedData = await fetchAllProfessionals(navigate);
