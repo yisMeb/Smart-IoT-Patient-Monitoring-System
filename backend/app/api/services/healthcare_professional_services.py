@@ -3,9 +3,12 @@ import asyncpg
 from fastapi import HTTPException
 from app.api.models.healthcare_professional_models import CreateHealthcareProfessional, UpdateHealthcareProfessional
 from datetime import datetime, timezone
-
+from app.api.dependacies import create_firebase_user, generate_password_reset_email
+from app.api.services.auth_services import add_users, asign_role
+from firebase_admin import auth
 
 async def add_healthcare_professional(professional: CreateHealthcareProfessional, db: asyncpg.Connection):
+    Urole = "HProfessional"
     try:
         institution_exists = await db.fetchval(
     '''
@@ -33,16 +36,22 @@ async def add_healthcare_professional(professional: CreateHealthcareProfessional
     professional.name,
     professional.specialization,
     professional.contact_number,
-    professional.email
+    professional.email 
 )
-
 
         if not professional_id:
             raise HTTPException(
                 status_code=500, 
                 detail="Failed to add healthcare professional to the database."
             )
+        firebase_user = await create_firebase_user(professional.email)
+        auth.set_custom_user_claims(firebase_user.uid, {"isTemporaryPassword": True}) #this will be set to false when user resets password
+        reset_pass = await generate_password_reset_email(professional.email)
+        assignment_id, role_id = await asign_role(db, professional.institution_id, Urole)
+        if assignment_id is None or role_id is None:
+            raise HTTPException(status_code=500, detail={"message": "Role creation failed."})
 
+        await add_users(db, email=professional.email, role_id=role_id, professional_id=professional_id)
         return {
             "professional_id": professional_id,
             "institution_id": professional.institution_id,
@@ -50,13 +59,12 @@ async def add_healthcare_professional(professional: CreateHealthcareProfessional
             "specialization": professional.specialization,
             "contact_number": professional.contact_number,
             "email": professional.email,
+            "reset_pass_link": reset_pass,
             "created_at": datetime.now(timezone.utc),
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-
-
 
 async def get_healthcare_professionals(db: asyncpg.Connection):
     try:
