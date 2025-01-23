@@ -1,12 +1,15 @@
 import asyncpg
 from datetime import datetime, timezone
-
 from fastapi import HTTPException
 from pydantic import ValidationError
 from app.api.models.patient_models import PatientCreate, PatientUpdate
 from app.api.models.other_models import validate_input, validate_phone_number
+from app.api.dependacies import create_firebase_user, generate_password_reset_email
+from firebase_admin import auth
+from app.api.services.auth_services import add_users, asign_role
 
 async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection):
+    Urole = "Patient"
     try:
         current_date = datetime.now(timezone.utc).replace(tzinfo=None)
 
@@ -37,7 +40,7 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
                     oxygen_threshold_lower, 
                     heartrate_threshold_lower, 
                     temperature_threshold_lower, 
-                    professional_id,   
+                    professional_id
                 )
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
                 RETURNING patient_id, institution_id
@@ -58,25 +61,48 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
             patient.temperature_threshold,
             patient.oxygen_threshold_lower, 
             patient.heartrate_threshold_lower, 
-            patient.temperature_threshold_lower,  
+            patient.temperature_threshold_lower,
             patient.professional_id
             )
-
         if not record:
             raise HTTPException(status_code=500, detail="Failed to insert patient data")
-
-        #Update the device table
-        update_query = """
-        UPDATE public.device
-        SET is_assigned = TRUE, assigned_to = $1
-        WHERE deviceid = $2
+        check_device = """
+            SELECT is_assigned, assigned_to
+            FROM public.device
+            WHERE deviceid = $1
         """
-        #await db.execute(update_query, record["patient_id"], patient.device_id)
+        device_status = await db.fetchrow(check_device, patient.device_id)
+
+        if device_status["is_assigned"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Device {patient.device_id} is already assigned to patient {device_status['assigned_to']}"
+            )
+            
+        #assign device to the patient
+        update_query = """
+            UPDATE public.device
+            SET is_assigned = TRUE, assigned_to = $1
+            WHERE deviceid = $2
+        """
+        await db.execute(update_query, record["patient_id"], patient.device_id)
+       
+       #send email to patient
+        firebase_user = await create_firebase_user(patient.email)
+        auth.set_custom_user_claims(firebase_user.uid, {"isTemporaryPassword": True}) #this will be set to false when user resets password
+        reset_pass = await generate_password_reset_email(patient.email)
+        assignment_id, role_id = await asign_role(db, patient.institution_id, Urole)
         
-        #return {
-        #   "patient_id": record["patient_id"],
-        #    "institution_id": record["institution_id"],
-        #}
+        if assignment_id is None or role_id is None:
+            raise HTTPException(status_code=500, detail={"message": "Role creation failed."})
+
+        await add_users(db, email=patient.email, role_id=role_id, patient_id=record["patient_id"])
+        
+        return {
+           "patient_id": record["patient_id"],
+           "institution_id": record["institution_id"],
+           "reset_pass_link": reset_pass,
+        }
     
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
