@@ -11,7 +11,7 @@ class PatientCreate(BaseModel):
     email: str
     status: str
     address: Optional[str]  
-    device_id: UUID
+    device_id: str
     class Config:
         from_attributes = True
 
