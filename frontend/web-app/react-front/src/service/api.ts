@@ -207,14 +207,14 @@ export const addProfessional = async (
 
 export const updatePatient = async (
   navigate: ReturnType<typeof useNavigate>,
-  professionalId: string,
+  patientID: string,
   updates: Partial<Patient>
 ) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
     if (!auth) return;
-
-    const response = await fetch(`${UPDATE_PATIENT}/${professionalId}`, {
+    console.log(updates);
+    const response = await fetch(`${UPDATE_PATIENT}/${patientID}`, {
       method: "PUT",
       headers: auth.headers,
       body: JSON.stringify(updates),
@@ -256,7 +256,7 @@ export const addPatient = async (
     if (!auth) return;
     const patientData = {
       ...patient,
-      device_id: patient.device_id || "Unassigned",
+      device_id: patient.device_id || null,
       oxygen_threshold: patient.oxygen_threshold || 0,
       heartrate_threshold: patient.heartrate_threshold || 0,
       temperature_threshold: patient.temperature_threshold || 0,
