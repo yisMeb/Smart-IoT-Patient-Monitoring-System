@@ -61,7 +61,7 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
             patient.temperature_threshold,
             patient.oxygen_threshold_lower, 
             patient.heartrate_threshold_lower, 
-            patient.temperature_threshold_lower,  
+            patient.temperature_threshold_lower,
             patient.professional_id
             )
         if not record:
