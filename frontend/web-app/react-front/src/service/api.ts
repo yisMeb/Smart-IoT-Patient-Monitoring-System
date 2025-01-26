@@ -6,6 +6,7 @@ import {
 } from "../lib/cookieUtils";
 import { useNavigate } from "react-router-dom";
 import { body } from "framer-motion/client";
+import { sendResetPasswordEmail } from "./emailService";
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
 const ADD_PATIENT = import.meta.env.VITE_API_ADD_PATIENT as string;
@@ -175,8 +176,7 @@ export const updateProfessional = async (
   }
 };
 
-export const addProfessional = async (
-  navigate: ReturnType<typeof useNavigate>,
+export const addProfessional = async (navigate: ReturnType<typeof useNavigate>,
   professional: {
     name: string;
     specialization: string;
@@ -197,8 +197,14 @@ export const addProfessional = async (
     if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
-
-    return await response.json();
+    const data = await response.json();
+    //send an email to the professional
+    await sendResetPasswordEmail(
+      data.email,
+      data.reset_pass_link,
+      data.name
+    );
+    return data;
   } catch (error) {
     console.error("Failed to add professional:", error);
     throw error;
@@ -274,8 +280,15 @@ export const addPatient = async (
     if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
+    const data = await response.json();
 
-    return await response.json();
+    //send reset password email to the patient
+    await sendResetPasswordEmail(
+      patient.email,
+      data.reset_pass_link,
+      patient.name
+    );
+    return data;
   } catch (error) {
     console.error("Failed to add Patient:", error);
     throw error;
