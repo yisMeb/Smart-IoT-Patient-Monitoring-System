@@ -5,6 +5,7 @@ from .routes.healthcare_professional_routes import router as healthcare_professi
 from .routes.patient import router as patient_router
 from .routes.health_data import router as add_HData
 from .routes.device import router as Devices
+from .routes.alert import router as Alerts
 
 
 
@@ -16,4 +17,5 @@ api_router.include_router(healthcare_professional_router, prefix="/healthcare-pr
 api_router.include_router(patient_router, prefix="/patient", tags=["patients"])
 api_router.include_router(add_HData, prefix="/health_data", tags=["health_data"])
 api_router.include_router(Devices, prefix="/Device", tags=["Device"])
+api_router.include_router(Alerts, prefix="/Alerts", tags=["Alerts"])
 
