@@ -7,7 +7,11 @@ class InstituteSignup(BaseModel):
     password: str
     name: str
     address: str
-
+class InstituteUpdate(BaseModel):
+    name: str
+    address: str
+    email: str
+    
 class UserLogin(BaseModel):
     email: str  
     password: str

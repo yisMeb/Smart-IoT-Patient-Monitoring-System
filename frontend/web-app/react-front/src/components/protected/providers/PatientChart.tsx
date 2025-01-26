@@ -36,18 +36,24 @@ export const PatientChart = () => {
   useEffect(() => {
     const loadChartData = async () => {
       try {
-        const patients = await fetchAllPatient(navigate);
-        const groupedData = patients.reduce((acc: Record<string, number>, patient: { created_at: string }) => {
-          const month = format(new Date(patient.created_at), "MMMM");
-          acc[month] = (acc[month] || 0) + 1;
-          return acc;
-        }, {});
-
+        const patients = (await fetchAllPatient(navigate)) || [];
+        if (!Array.isArray(patients)) {
+          throw new Error("Invalid data format: patients is not an array");
+        }
+  
+        const groupedData = patients.reduce(
+          (acc: Record<string, number>, patient: { created_at: string }) => {
+            const month = format(new Date(patient.created_at), "MMMM");
+            acc[month] = (acc[month] || 0) + 1;
+            return acc;
+          },
+          {}
+        );
         const chartData: ChartData[] = Object.entries(groupedData).map(([month, value]) => ({
           month,
           value: Number(value),
         }));
-
+  
         setData(chartData);
       } catch (error) {
         console.error("Failed to load chart data:", error);
@@ -62,7 +68,7 @@ export const PatientChart = () => {
       <div className="mb-6 flex items-center justify-between flex-wrap">
         <div className="pl-8">
           <h3 className="text-xl font-semibold">Patient Admitted</h3>
-          <p className="text-gray-500">Days</p>
+          <p className="text-gray-500">days</p>
         </div>
         <Popover>
           <PopoverTrigger asChild>
@@ -100,6 +106,7 @@ export const PatientChart = () => {
         </Popover>
       </div>
       <div className="h-[430px]">
+      {data.length > 0 ? (
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="2 2" vertical={false} />
@@ -110,6 +117,9 @@ export const PatientChart = () => {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+        ) : (
+          <div className="text-center text-gray-500">No data available</div>
+        )}
       </div>
     </div>
   );

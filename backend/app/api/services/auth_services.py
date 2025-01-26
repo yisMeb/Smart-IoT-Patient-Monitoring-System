@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import logging
 import asyncpg
 from fastapi import HTTPException
-from app.api.models.auth_models import InstituteSignup, UserLogin
+from app.api.models.auth_models import InstituteSignup, InstituteUpdate, UserLogin
 from app.api.models.other_models import validate_input
 from firebase_admin import auth
 
@@ -34,12 +34,8 @@ async def signupInstitute(user: InstituteSignup, db: asyncpg.Connection):
         assignment_id, role_id = await asign_role(db, i_id, Urole)
         if assignment_id is None or role_id is None:
             raise HTTPException(status_code=500, detail={"message": "Role creation failed."})
-        users_table = {
-            "email": user.email,
-            "role_id": role_id,
-            "institute_id": i_id,
-        }
-        await add_users(db, users_table)
+        
+        await add_users(db, email=user.email, role_id=role_id, institution_id=i_id)
 
         return {
             "message": "User created successfully.",
@@ -104,20 +100,38 @@ async def check_user_verification(email: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching user: {str(e)}")
 
-async def add_users(db:asyncpg.Connection, user_table: dict):
+async def add_users(db:asyncpg.Connection, email: str, role_id: str, institution_id: str = None, professional_id: str = None, patient_id: str = None):
     current_date = datetime.now(timezone.utc).replace(tzinfo=None)
-    if user_table['institute_id'] is not None:
-        try:
-            user_id = await db.fetchval('''
-                INSERT INTO public."users"(email, created_at, role_id, institution_id)
-                VALUES($1, $2, $3, $4)
-                RETURNING user_id
-            ''', user_table['email'], current_date, user_table['role_id'], user_table['institute_id'], )
-            
-            return user_id
-        
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"users creation error: {str(e)}")
+    
+    if institution_id is not None:
+        column = "institution_id"
+        value = institution_id
+    elif professional_id is not None:
+        column = "professional_id"
+        value = professional_id
+    elif patient_id is not None:
+        column = "patient_id"
+        value = patient_id
+    else:
+        raise HTTPException(status_code=400, detail="No valid ID provided for institution, professional, or patient.")
+
+    try:
+        # Construct and execute the query dynamically
+        query = f'''
+            INSERT INTO public."users"(email, created_at, role_id, {column})
+            VALUES($1, $2, $3, $4)
+            RETURNING user_id
+        '''
+        user_id = await db.fetchval(
+            query,
+            email,
+            current_date,
+            role_id,
+            value,
+        )
+        return user_id
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"User creation error: {str(e)}")
     
 
 async def asign_role(db:asyncpg.Connection, u_id: str, u_role: str):
@@ -171,3 +185,30 @@ async def fetch_user_by_email(email: str, db: asyncpg.Connection):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+async def fetch_Institution_by_id(id: str, db: asyncpg.Connection):
+    try:
+        user = await db.fetchrow('''
+            SELECT * FROM public."institutions" WHERE institution_id = $1
+        ''', id)
+        if user is None:
+            raise HTTPException(status_code=404, detail="institutions not found.")
+
+        return dict(user)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+async def update_institutes(db: asyncpg.Connection, id: str, updates: InstituteUpdate):
+    await fetch_Institution_by_id(id, db) #check if the user exists
+    try:
+        await db.execute('''
+            UPDATE public."institutions"
+            SET name = $1, address = $2, email = $3
+            WHERE institution_id = $4
+        ''', updates.name, updates.address, updates.email, id)
+
+        return {"message": "Institution updated successfully."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    

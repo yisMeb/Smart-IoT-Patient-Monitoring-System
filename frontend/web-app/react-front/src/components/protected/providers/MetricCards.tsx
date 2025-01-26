@@ -72,22 +72,24 @@ export const MetricCards = () => {
   useEffect(() => {
     const loadMetrics = async () => {
       try {
-        const patients = await fetchAllPatient(navigate);
-        const patientCount = patients.length;
-        const professionals = await fetchAllProfessionals(navigate);
-        const professionalCount = professionals.length;
-        const devices = await fetchAllDevices(navigate);
-        const deviceCount = devices.length;
-
+        const patients = (await fetchAllPatient(navigate)) || [];
+        const patientCount = Array.isArray(patients) ? patients.length : 0;
+  
+        const professionals = (await fetchAllProfessionals(navigate)) || [];
+        const professionalCount = Array.isArray(professionals) ? professionals.length : 0;
+  
+        const devices = (await fetchAllDevices(navigate)) || [];
+        const deviceCount = Array.isArray(devices) ? devices.length : 0;
+  
         const patient_previousCount = 1;
         const patient_change = ((patientCount - patient_previousCount) / patient_previousCount) * 100;
-
+  
         const professional_previousCount = 1;
         const professional_change = ((professionalCount - professional_previousCount) / professional_previousCount) * 100;
-
+  
         const device_previousCount = 1;
         const device_change = ((deviceCount - device_previousCount) / device_previousCount) * 100;
-
+  
         setMetrics([
           { value: patientCount.toString(), label: 'Patients', change: parseFloat(patient_change.toFixed(1)) },
           { value: professionalCount.toString(), label: 'Professionals', change: parseFloat(professional_change.toFixed(1)) },

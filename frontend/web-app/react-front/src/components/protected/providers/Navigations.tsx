@@ -1,6 +1,18 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { User, LogOut, UserRoundPen } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { auth } from "@/lib/firebaseConfig";
+import { clearCookies } from "@/lib/cookieUtils";
+import { useUserRole } from "@/context/UserRoleContext";
 
 const navItems = [
   { path: "/institutes/h-provider/", text: "Dashboard" },
@@ -11,7 +23,22 @@ const navItems = [
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const navigate = useNavigate();
+  const { setRoleName, setIsAuthenticated } = useUserRole();
+  
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      clearCookies();
+      setIsAuthenticated(false);  
+      setRoleName("");  
+      console.log("Logged out successfully");
+      navigate('/login');
+    } catch (error) {
+      console.error("Error during logout", error);
+    }
+  };
+  
   return (
     <nav className="relative flex items-center justify-between p-4 bg-transparent z-50">
       <div className="flex items-center">
@@ -64,14 +91,19 @@ export const Navigation = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="w-10 h-10 rounded-xl bg-white overflow-hidden">
-        <img
-          src="/thegirl.png"
-          alt="Profile"
-          className="w-full h-full object-cover"
-        />
-      </div>
+      <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <div className="w-10 h-10 rounded-xl bg-white overflow-hidden flex justify-center items-center cursor-pointer">
+                    <User />
+                </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="text-center">
+                <DropdownMenuLabel>Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/institutes/h-provider/profile')}><UserRoundPen /> Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}><LogOut /> Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     </nav>
   );
 };
