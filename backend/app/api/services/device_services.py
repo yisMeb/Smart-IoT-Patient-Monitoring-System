@@ -6,15 +6,14 @@ from app.api.models.device_models import AddDevice, UpdateDevice
 async def add_devices(data: AddDevice , db: asyncpg.Connection):
     try:
         query ='''
-            INSERT INTO public."device"(device_name, is_assigned, assigned_to)
-            VALUES($1, $2, $3)
+            INSERT INTO public."device"(device_name, is_assigned)
+            VALUES($1, $2)
             RETURNING data_id, assigned_to
         '''
         device_data = await db.fetchrow(
             query,
             data.device_name,
-            data.is_assigned,
-            data.assigned_to
+            data.is_assigned
         )
 
         if not device_data:
@@ -30,11 +29,11 @@ async def add_devices(data: AddDevice , db: asyncpg.Connection):
 async def update_device(device_id: int, device_data: UpdateDevice, db: asyncpg.Connection):
     query = """
     UPDATE public."device"
-    SET device_name = $1, is_assigned = $2, assigned_to = $3
-    WHERE device_id = $4
+    SET device_name = $1, is_assigned = $2
+    WHERE device_id = $3
     RETURNING device_id
     """
-    values = (device_data.device_name, device_data.is_assigned, device_data.assigned_to, device_id)
+    values = (device_data.device_name, device_data.is_assigned, device_id)
     record = await db.fetchrow(query, *values)
     return record
 

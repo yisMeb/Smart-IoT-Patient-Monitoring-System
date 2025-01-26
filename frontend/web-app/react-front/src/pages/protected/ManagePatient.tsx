@@ -6,12 +6,14 @@ import {
   addPatient,
   updatePatient,
   fetchAllProfessionals,
+  fetchAllDevices,
 } from "@/service/api";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../components/ui/loading";
 import { getRoleIDFromCookie } from "../../lib/cookieUtils";
 
 interface Patient {
+  patient_id: string;
   institution_id: string;
   name: string;
   dob: string;
@@ -39,6 +41,13 @@ interface Professional {
   created_at: string;
 }
 
+interface Device {
+  deviceid: string;
+  device_name: string;
+  is_assigned: boolean;
+  assigned_to: string;
+}
+
 const ManagePatient: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -63,6 +72,8 @@ const ManagePatient: React.FC = () => {
     heartrate_threshold_lower: 0,
     temperature_threshold_lower: 0,
   });
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
   const navigate = useNavigate();
 
   // Fetch patients data from the API
@@ -81,8 +92,7 @@ const ManagePatient: React.FC = () => {
     getPatients();
   }, [navigate]);
 
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
-
+  // Fetch professionals data from the API
   useEffect(() => {
     const getProfessionals = async () => {
       try {
@@ -90,15 +100,27 @@ const ManagePatient: React.FC = () => {
         setProfessionals(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
       }
     };
 
     getProfessionals();
   }, [navigate]);
 
-  //get name of doctor by ID
+  // Fetch devices data from the API
+  useEffect(() => {
+    const getDevices = async () => {
+      try {
+        const data = await fetchAllDevices(navigate);
+        setDevices(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      }
+    };
+
+    getDevices();
+  }, [navigate]);
+
+  // Get the name of a professional by ID
   const getProfessionalNameById = (professionalId: string): string => {
     const professional = professionals.find(
       (p) => p.professional_id === professionalId
@@ -152,7 +174,7 @@ const ManagePatient: React.FC = () => {
     try {
       const updatedPatient = await updatePatient(
         navigate,
-        selectedPatient.device_id,
+        selectedPatient.patient_id,
         {
           name: selectedPatient.name,
           dob: selectedPatient.dob,
@@ -161,6 +183,7 @@ const ManagePatient: React.FC = () => {
           status: selectedPatient.status,
           address: selectedPatient.address,
           device_id: selectedPatient.device_id,
+          professional_id: selectedPatient.professional_id,
         }
       );
       setPatients(
@@ -206,6 +229,7 @@ const ManagePatient: React.FC = () => {
           </div>
         </div>
       </div>
+
       {/* Add Patient Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
@@ -213,6 +237,7 @@ const ManagePatient: React.FC = () => {
             <h2 className="text-xl font-bold mb-4">Add Patient</h2>
 
             <div className="space-y-4">
+              {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Name
@@ -228,6 +253,7 @@ const ManagePatient: React.FC = () => {
                 />
               </div>
 
+              {/* Date of Birth */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Date of Birth
@@ -243,6 +269,7 @@ const ManagePatient: React.FC = () => {
                 />
               </div>
 
+              {/* Address */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Address
@@ -258,6 +285,7 @@ const ManagePatient: React.FC = () => {
                 />
               </div>
 
+              {/* Contact Number */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Contact Number
@@ -276,6 +304,7 @@ const ManagePatient: React.FC = () => {
                 />
               </div>
 
+              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Email
@@ -317,6 +346,29 @@ const ManagePatient: React.FC = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Device Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Assign Device
+                </label>
+                <select
+                  value={newPatient.device_id}
+                  onChange={(e) =>
+                    setNewPatient({ ...newPatient, device_id: e.target.value })
+                  }
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a device</option>
+                  {devices
+                    .filter((device) => !device.is_assigned) // Show only unassigned devices
+                    .map((device) => (
+                      <option key={device.deviceid} value={device.deviceid}>
+                        {device.device_name}
+                      </option>
+                    ))}
+                </select>
+              </div>
             </div>
 
             <div className="mt-6 flex justify-center space-x-4 w-full">
@@ -336,6 +388,7 @@ const ManagePatient: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Edit Patient Modal */}
       {isEditModalOpen && selectedPatient && (
         <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
@@ -438,7 +491,7 @@ const ManagePatient: React.FC = () => {
                 />
               </div>
 
-              {/* Assigned Doctor (Dropdown) */}
+              {/* Professional Dropdown */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Assign Doctor
@@ -464,6 +517,36 @@ const ManagePatient: React.FC = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Device Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Assign Device
+                </label>
+                <select
+                  value={selectedPatient.device_id}
+                  onChange={(e) =>
+                    setSelectedPatient({
+                      ...selectedPatient,
+                      device_id: e.target.value,
+                    })
+                  }
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a device</option>
+                  {devices
+                    .filter(
+                      (device) =>
+                        device.is_assigned ||
+                        device.deviceid === selectedPatient.device_id
+                    ) // Show unassigned devices or the currently assigned device
+                    .map((device) => (
+                      <option key={device.deviceid} value={device.deviceid}>
+                        {device.device_name}
+                      </option>
+                    ))}
+                </select>
+              </div>
             </div>
 
             <div className="mt-6 flex justify-center space-x-4 w-full">
@@ -483,10 +566,11 @@ const ManagePatient: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Patients Table */}
       <div className="max-w-screen-lg mx-auto -mt-40">
         <div className="p-6 space-y-6">
           <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            {/* Add a wrapper div with horizontal scroll */}
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead className="bg-gray-100">
@@ -546,7 +630,6 @@ const ManagePatient: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {patient.device_id}
                       </td>
-
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           className="flex items-center px-4 py-2 bg-[#e5e7eb] text-[#71717a] rounded-lg hover:bg-slate-600 transition-colors"
@@ -565,7 +648,7 @@ const ManagePatient: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>{" "}
+      </div>
     </div>
   );
 };
