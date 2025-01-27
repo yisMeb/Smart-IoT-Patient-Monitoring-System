@@ -12,13 +12,6 @@ class PatientCreate(BaseModel):
     status: str
     address: Optional[str]  
     device_id: UUID
-    professional_id: str
-    oxygen_threshold: float = 0  
-    heartrate_threshold: float = 0  
-    temperature_threshold: float = 0  
-    oxygen_threshold_lower: float = 0 
-    heartrate_threshold_lower: float = 0 
-    temperature_threshold_lower: float = 0 
     class Config:
         from_attributes = True
 

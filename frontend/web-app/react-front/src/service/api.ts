@@ -3,12 +3,14 @@ import {
   getIdTokenFromCookies,
   isTokenExpired,
   getRoleFromCookies,
+  getRoleIDFromCookie,
 } from "../lib/cookieUtils";
 import { useNavigate } from "react-router-dom";
 import { body } from "framer-motion/client";
 import { sendResetPasswordEmail } from "./emailService";
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
+const Assigned_PATIENT = import.meta.env.VITE_API_GET_ASSIGNED_PATIENT as string;
 const ADD_PATIENT = import.meta.env.VITE_API_ADD_PATIENT as string;
 const UPDATE_PATIENT = import.meta.env.VITE_API_UPDATE_PATIENT as string;
 
@@ -103,6 +105,30 @@ export const fetchAllPatient = async (
     throw error;
   }
 };
+
+export const fetchAssingnedPatients = async (
+  navigate: ReturnType<typeof useNavigate>,
+)=>{
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+    if (!auth || !role) return;
+
+    const response = await fetch(`${Assigned_PATIENT}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch patients:", error);
+    throw error;
+  }
+}
 
 export const fetchAllProfessionals = async (
   navigate: ReturnType<typeof useNavigate>

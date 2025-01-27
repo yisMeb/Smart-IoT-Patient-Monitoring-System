@@ -75,6 +75,14 @@ async def get_healthcare_professionals(db: asyncpg.Connection):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+async def assigned_patients(db: asyncpg.Connection, professional_id: str):
+    try:
+        rows = await db.fetch('SELECT * FROM public."patients" where professional_id = $1', professional_id)
+        return [dict(row) for row in rows]
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
 
 async def delete_healthcare_professionals(db: asyncpg.Connection, institution_id :str, professional_id:str  ):
     query = """
@@ -124,3 +132,4 @@ async def update_healthcare_professional(
         raise HTTPException(status_code=404, detail="Healthcare professional not found.")
 
     return dict(updated_professional)
+

@@ -6,10 +6,13 @@ import { UserRoleProvider } from "./context/UserRoleContext";
 import VerifyEmail from "./pages/public/VerifyEmail";
 import ProviderDashboard from "./pages/protected/ProviderDashboard";
 import ManagePatient from "./pages/protected/ManagePatient";
+import ManagePatients from "./pages/protected/professionals/ManagePatients";
 import ManageDevices from "./pages/protected/ManageDevices";
 import ProtectedRoute from "./context/ProtectedRoute";
 import ManageProfessionals from "./pages/protected/ManageProfessionals";
 import Profile from "./pages/protected/Profile";
+import ProfessionalDashboard from "./pages/protected/professionals/ProfessionalDashboard";
+import Alerts from "./pages/protected/professionals/Alerts";
 
 function App() {
   return (
@@ -61,6 +64,31 @@ function App() {
             element={
               <ProtectedRoute requiredRole="institution">
                 <Profile/>
+              </ProtectedRoute>
+            }
+          />
+        {/* professionals */}
+        <Route
+            path="/professionals/dashboard"
+            element={
+              <ProtectedRoute requiredRole="professional"> {/* professionals */}
+                <ProfessionalDashboard/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professionals/patients"
+            element={
+              <ProtectedRoute requiredRole="professional"> {/* professionals */}
+                <ManagePatients/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professionals/alert"
+            element={
+              <ProtectedRoute requiredRole="professional"> {/* professionals */}
+                <Alerts/>
               </ProtectedRoute>
             }
           />
