@@ -10,7 +10,8 @@ import { body } from "framer-motion/client";
 import { sendResetPasswordEmail } from "./emailService";
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
-const Assigned_PATIENT = import.meta.env.VITE_API_GET_ASSIGNED_PATIENT as string;
+const Assigned_PATIENT = import.meta.env
+  .VITE_API_GET_ASSIGNED_PATIENT as string;
 const ADD_PATIENT = import.meta.env.VITE_API_ADD_PATIENT as string;
 const UPDATE_PATIENT = import.meta.env.VITE_API_UPDATE_PATIENT as string;
 
@@ -61,7 +62,6 @@ interface Device {
   deviceid: string;
   device_name: string;
   is_assigned: boolean;
-  assigned_to: string;
 }
 
 const checkAuthAndGetHeaders = (navigate: ReturnType<typeof useNavigate>) => {
@@ -107,8 +107,8 @@ export const fetchAllPatient = async (
 };
 
 export const fetchAssingnedPatients = async (
-  navigate: ReturnType<typeof useNavigate>,
-)=>{
+  navigate: ReturnType<typeof useNavigate>
+) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
     const role = getRoleIDFromCookie();
@@ -128,7 +128,7 @@ export const fetchAssingnedPatients = async (
     console.error("Failed to fetch patients:", error);
     throw error;
   }
-}
+};
 
 export const fetchAllProfessionals = async (
   navigate: ReturnType<typeof useNavigate>
@@ -202,7 +202,8 @@ export const updateProfessional = async (
   }
 };
 
-export const addProfessional = async (navigate: ReturnType<typeof useNavigate>,
+export const addProfessional = async (
+  navigate: ReturnType<typeof useNavigate>,
   professional: {
     name: string;
     specialization: string;
@@ -225,11 +226,7 @@ export const addProfessional = async (navigate: ReturnType<typeof useNavigate>,
     }
     const data = await response.json();
     //send an email to the professional
-    await sendResetPasswordEmail(
-      data.email,
-      data.reset_pass_link,
-      data.name
-    );
+    await sendResetPasswordEmail(data.email, data.reset_pass_link, data.name);
     return data;
   } catch (error) {
     console.error("Failed to add professional:", error);
@@ -349,7 +346,6 @@ export const updateDevice = async (
 export const addDevice = async (device: {
   device_name: string;
   is_assigned: boolean;
-  assigned_to: string;
 }) => {
   try {
     console.log(device);
