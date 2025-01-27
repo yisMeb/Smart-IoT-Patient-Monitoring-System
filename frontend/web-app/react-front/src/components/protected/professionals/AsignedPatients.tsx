@@ -1,5 +1,6 @@
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Loader2, RefreshCw } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -8,73 +9,108 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useNavigate } from "react-router-dom";
+import { fetchAssingnedPatients } from "../../../service/api";
+import { Button } from "@/components/ui/button";
 
-const sampleData = [
-    {
-      id: 1,
-      name: "Martha Abebe",
-      dateOfBirth: "1990-05-15",
-      contact: "+25191245457",
-      status: "Not Assigned",
-    },
-    {
-      id: 2,
-      name: "John Doe",
-      dateOfBirth: "1985-07-20",
-      contact: "+1234567890",
-      status: "Assigned",
-    },
-    {
-      id: 3,
-      name: "Jane Smith",
-      dateOfBirth: "1992-11-30", 
-      contact: "+9876543210",
-      status: "Assigned",
-    },
-  ];
-  
+interface Patient {
+  patient_id: string;
+  name: string;
+  dob: string;
+  contact_number: string;
+  email: string;
+  status: string;
+}
 
 export const AssignedPatients = () => {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchAssingnedPatients(navigate);
+      setPatients(data);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError(String(err));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleRefresh = () => {
+    fetchData();
+  };
+
+  if (error) return <div>Error: {error}</div>;
+
   return (
     <Card>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[150px]">Name</TableHead>
-              <TableHead>Date of birth</TableHead>
-              <TableHead>Contact number</TableHead>
-              <TableHead>Sensor</TableHead>
-              <TableHead className="text-right">Case</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sampleData.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell className="font-medium">
-                  {row.name} <br />
-                  <span className="text-gray-400 font-normal">{row.contact}</span>
-                </TableCell>
-                <TableCell>{row.dateOfBirth}</TableCell>
-                <TableCell>{row.contact}</TableCell>
-                <TableCell className="text-right">
-                  <div
-                    className={`font-bold w-fit p-1 rounded-md ${
-                      row.status === "Not Assigned"
-                        ? "bg-[#fff8e0] text-[#f3587a]"
-                        : "bg-[#fff8e0] text-[#ffd338]"
-                    }`}
-                  >
-                    {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <button className="text-[#aeb2c1] border rounded-md bg-[#e5e6e9]"><ChevronRight size={18}/></button>
-                </TableCell>
+        <div className="flex justify-end items-center mb-4 mt-2">
+          <Button
+            onClick={handleRefresh}
+            disabled={loading}
+            variant="outline"
+            size="icon"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[150px]">Name</TableHead>
+                <TableHead>Date of Birth</TableHead>
+                <TableHead>Contact Number</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {patients.map((patient) => (
+                <TableRow key={patient.patient_id}>
+                  <TableCell className="font-medium">
+                    {patient.name} <br />
+                    <span className="text-gray-400 font-normal">
+                      {patient.email}
+                    </span>
+                  </TableCell>
+                  <TableCell>{new Date(patient.dob).toLocaleDateString()}</TableCell>
+                  <TableCell>{patient.contact_number}</TableCell>
+                  <TableCell className="text-right">
+                    <div
+                      className={`font-bold w-fit p-1 rounded-md bg-[#fff8e0] text-[#ffd338]`}
+                    >
+                      {patient.status}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <button className="text-[#aeb2c1] border rounded-md bg-[#e5e6e9]">
+                      <ChevronRight size={18} />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );

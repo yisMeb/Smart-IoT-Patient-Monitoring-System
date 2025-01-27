@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.api.services.healthcare_professional_services import (
     add_healthcare_professional,
+    assigned_patients,
     delete_healthcare_professionals,
     get_healthcare_professionals,
     update_healthcare_professional,
@@ -64,3 +65,8 @@ async def update_professional(
 ):
     print(updates)
     return await update_healthcare_professional(db, professional_id, updates)
+
+
+@router.get("/patients/{professional_id}")
+async def get_professional_patients(professional_id: str, db: asyncpg.Connection = Depends(get_db_conn)):
+    return await assigned_patients(db, professional_id)

@@ -8,3 +8,4 @@ async def delete_institution_service(institution_id: int, db: asyncpg.Connection
     """
     result = await db.fetchrow(query, institution_id)
     return result
+
