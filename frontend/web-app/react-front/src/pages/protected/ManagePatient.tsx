@@ -29,6 +29,7 @@ interface Patient {
   heartrate_threshold_lower: number;
   temperature_threshold_lower: number;
   professional_id: string;
+  [key: string]: string | number;
 }
 
 interface Professional {
