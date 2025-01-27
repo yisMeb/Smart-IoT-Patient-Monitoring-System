@@ -58,15 +58,15 @@ async def delete_professionals(
 
 
 @router.put("/update/{professional_id}")
-async def update_professional(
-    professional_id: str,
-    updates: UpdateHealthcareProfessional,
-    db: asyncpg.Connection = Depends(get_db_conn),
-):
-    print(updates)
-    return await update_healthcare_professional(db, professional_id, updates)
-
+async def update_professional(professional_id: str, updates: UpdateHealthcareProfessional,db: asyncpg.Connection = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
+    if current_user["user_role"] == "institution":
+        return await update_healthcare_professional(db, professional_id, updates)
+    else:
+        raise HTTPException(status_code=401, detail="Only institution users can edit.")
 
 @router.get("/patients/{professional_id}")
-async def get_professional_patients(professional_id: str, db: asyncpg.Connection = Depends(get_db_conn)):
-    return await assigned_patients(db, professional_id)
+async def get_professional_patients(professional_id: str, db: asyncpg.Connection = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
+    if current_user["user_role"] == "professional":
+        return await assigned_patients(db, professional_id)
+    else:
+        raise HTTPException(status_code=401, detail="Only professionals can perform this task!")
