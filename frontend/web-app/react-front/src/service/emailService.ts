@@ -2,10 +2,11 @@ import emailjs from 'emailjs-com';
 
 const SERVICE_ID = import.meta.env.VITE_EMAIL_SERVICE_ID;
 const TEMPLATE_ID = import.meta.env.VITE_EMAIL_TEMPLATEID;
-const USER_ID = import.meta.env.VITE_EMAIL_USER_ID;
+const PUBLIC_KEY = import.meta.env.VITE_EMAIL_USER_ID;
 
-export const sendResetPasswordEmail = async ( recipientEmail: string, resetPassLink: string, Name: string
-) => {
+emailjs.init(PUBLIC_KEY);
+
+export const sendResetPasswordEmail = async (recipientEmail: string, resetPassLink: string, Name: string) => {
   try {
     const templateParams = {
       to_email: recipientEmail,
@@ -16,8 +17,7 @@ export const sendResetPasswordEmail = async ( recipientEmail: string, resetPassL
     const response = await emailjs.send(
       SERVICE_ID,
       TEMPLATE_ID,
-      templateParams,
-      USER_ID
+      templateParams
     );
 
     console.log('Email sent successfully:', response);

@@ -53,7 +53,7 @@ export default function Login() {
 
             if (user_role === "institution") {
               navigate("/institutes/h-provider");
-            } else if (user_role === "professionals") {
+            } else if (user_role === "professional") {
               navigate("/professionals/dashboard");
             }
           } catch (error) {
@@ -135,7 +135,7 @@ export default function Login() {
           } else {
             if (user_role === "institution") {
               navigate("/institutes/h-provider");
-            } else if (user_role === "professionals") {
+            } else if (user_role === "professional") {
               navigate("/professionals/dashboard");
             } else if (user_role === "admin") {
               navigate("/admin");
