@@ -62,7 +62,7 @@ const ManagePatient: React.FC = () => {
     dob: "",
     contact_number: "",
     email: "",
-    status: "NULL",
+    status: "",
     address: "",
     device_id: "",
     professional_id: "",

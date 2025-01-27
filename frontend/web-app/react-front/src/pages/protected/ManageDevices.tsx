@@ -14,7 +14,6 @@ interface Device {
   deviceid: string;
   device_name: string;
   is_assigned: boolean;
-  assigned_to: string;
 }
 
 interface Patient {
@@ -36,85 +35,77 @@ interface Patient {
   professional_id: string;
 }
 
+// New type to combine Device and patient_name
+interface DeviceWithPatient extends Device {
+  patient_name: string;
+}
+
 const ManageDevices: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [devices, setDevices] = useState<Device[]>([]);
+  const [devices, setDevices] = useState<DeviceWithPatient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false); // State for error modal
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [newDevice, setNewDevice] = useState({
     device_name: "",
     is_assigned: false,
-    assigned_to: "",
   });
   const navigate = useNavigate();
 
-  // Fetch device data from the API
+  // Fetch devices and patients data from the API
   useEffect(() => {
-    const getDevices = async () => {
+    const getDevicesAndPatients = async () => {
       try {
-        const data = await fetchAllDevices(navigate);
-        setDevices(data);
+        const [devicesData, patientsData] = await Promise.all([
+          fetchAllDevices(navigate),
+          fetchAllPatient(navigate),
+        ]);
+
+        // Map patient names to devices
+        const devicesWithPatientNames = devicesData.map((device: Device) => {
+          const patient = patientsData.find(
+            (p: Patient) => p.device_id === device.deviceid
+          );
+          return {
+            ...device,
+            patient_name: patient ? patient.name : "Unassigned", // Add patient_name
+          };
+        });
+
+        setDevices(devicesWithPatientNames);
+        setPatients(patientsData); // Suppress unused warning
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
+        setIsErrorModalOpen(true); // Show error modal
       } finally {
         setLoading(false);
       }
     };
 
-    getDevices();
+    getDevicesAndPatients();
   }, [navigate]);
 
-  // Fetch patients data from the API
-  useEffect(() => {
-    const getPatients = async () => {
-      try {
-        const data = await fetchAllPatient(navigate);
-        setPatients(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getPatients();
-  }, [navigate]);
-
-  // Get name of patient by ID
-  const getPatientNameById = (patientId: string): string => {
-    const patient = patients.find((p) => p.patient_id === patientId);
-    return patient ? patient.name : "Unassigned";
-  };
-
+  // Handle adding a new device
   const handleAddDevice = async () => {
     try {
       const addedDevice = await addDevice(newDevice);
-      setDevices([...devices, addedDevice]);
+      setDevices([...devices, { ...addedDevice, patient_name: "Unassigned" }]);
       setIsModalOpen(false);
       setNewDevice({
         device_name: "",
         is_assigned: false,
-        assigned_to: "",
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add device");
+      setIsErrorModalOpen(true); // Show error modal
     }
   };
 
-  const getStatusColor = (status: boolean) => {
-    return status ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
-  };
-
-  const getAssignedColor = (assignedTo: string) => {
-    const patientName = getPatientNameById(assignedTo);
-    return patientName === "Unassigned"
-      ? "bg-yellow-100 text-yellow-800"
-      : "bg-blue-200 text-gray-800";
-  };
-
+  // Handle editing a device
   const handleEditDevice = async () => {
     if (!selectedDevice) return;
 
@@ -125,7 +116,9 @@ const ManageDevices: React.FC = () => {
       );
       setDevices((prevDevices) =>
         prevDevices.map((device) =>
-          device.deviceid === updatedDevice.deviceid ? updatedDevice : device
+          device.deviceid === updatedDevice.deviceid
+            ? { ...updatedDevice, patient_name: device.patient_name }
+            : device
         )
       );
       setIsEditModalOpen(false);
@@ -134,12 +127,24 @@ const ManageDevices: React.FC = () => {
       setError(
         err instanceof Error ? err.message : "An unexpected error occurred"
       );
+      setIsErrorModalOpen(true); // Show error modal
     }
   };
 
-  if (loading) return <Loading />;
-  if (error) return <div>Error: {error}</div>;
+  // Get status color based on assignment status
+  const getStatusColor = (status: boolean) => {
+    return status ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+  };
 
+  // Close error modal
+  const closeErrorModal = () => {
+    setIsErrorModalOpen(false);
+    setError(null);
+  };
+
+  if (loading) return <Loading />;
+
+  // Render the modal for adding/editing devices
   const renderModal = (isEdit: boolean) => (
     <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -170,93 +175,45 @@ const ManageDevices: React.FC = () => {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Is Assigned
-            </label>
-            <div className="mt-1">
-              <label className="inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={
-                    isEdit
-                      ? selectedDevice?.is_assigned || false
-                      : newDevice.is_assigned
-                  }
-                  onChange={(e) => {
-                    const isAssigned = e.target.checked;
-                    if (isEdit) {
+          {isEdit && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Is Assigned
+              </label>
+              <div className="mt-1">
+                <label className="inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedDevice?.is_assigned || false}
+                    onChange={(e) => {
+                      const isAssigned = e.target.checked;
                       setSelectedDevice({
                         ...selectedDevice!,
                         is_assigned: isAssigned,
-                        assigned_to: isAssigned
-                          ? selectedDevice?.assigned_to || ""
-                          : "",
                       });
-                    } else {
-                      setNewDevice({
-                        ...newDevice,
-                        is_assigned: isAssigned,
-                        assigned_to: isAssigned ? newDevice.assigned_to : "",
-                      });
-                    }
-                  }}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                <span className="ml-3 text-sm text-gray-900">
-                  {isEdit
-                    ? selectedDevice?.is_assigned
-                      ? "Assigned"
-                      : "Unassigned"
-                    : newDevice.is_assigned
-                    ? "Assigned"
-                    : "Unassigned"}
-                </span>
-              </label>
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <span className="ml-3 text-sm text-gray-900">
+                    {selectedDevice?.is_assigned ? "Assigned" : "Unassigned"}
+                  </span>
+                </label>
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Assigned To
-            </label>
-            <select
-              value={
-                isEdit
-                  ? selectedDevice?.assigned_to || ""
-                  : newDevice.assigned_to
-              }
-              onChange={(e) => {
-                const assignedTo = e.target.value;
-                if (isEdit) {
-                  setSelectedDevice({
-                    ...selectedDevice!,
-                    assigned_to: assignedTo,
-                    is_assigned: !!assignedTo,
-                  });
-                } else {
-                  setNewDevice({
-                    ...newDevice,
-                    assigned_to: assignedTo,
-                    is_assigned: !!assignedTo,
-                  });
-                }
-              }}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              disabled={
-                isEdit ? !selectedDevice?.is_assigned : !newDevice.is_assigned
-              }
-            >
-              <option value="">Unassigned</option>
-              {patients
-                .filter((patient) => !patient.device_id)
-                .map((patient) => (
-                  <option key={patient.patient_id} value={patient.patient_id}>
-                    {patient.name}
-                  </option>
-                ))}
-            </select>
-          </div>
+          )}
+          {!isEdit && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Is Assigned
+              </label>
+              <div className="mt-1">
+                <span className="px-2 py-1 text-sm text-gray-900 bg-gray-100 rounded">
+                  Not Assigned
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         <div className="mt-6 flex justify-center space-x-4 w-full">
           <button
@@ -272,6 +229,24 @@ const ManageDevices: React.FC = () => {
             onClick={isEdit ? handleEditDevice : handleAddDevice}
           >
             {isEdit ? "Save" : "Add"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Render the error modal
+  const renderErrorModal = () => (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-bold mb-4 text-red-600">Error</h2>
+        <p className="text-gray-700">{error}</p>
+        <div className="mt-6 flex justify-end">
+          <button
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+            onClick={closeErrorModal}
+          >
+            Close
           </button>
         </div>
       </div>
@@ -305,6 +280,7 @@ const ManageDevices: React.FC = () => {
       </div>
       {isModalOpen && renderModal(false)}
       {isEditModalOpen && renderModal(true)}
+      {isErrorModalOpen && renderErrorModal()} {/* Render error modal */}
       <div className="max-w-screen-lg mx-auto -mt-40">
         <div className="p-6 space-y-6">
           <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -321,7 +297,7 @@ const ManageDevices: React.FC = () => {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Assigned To
+                    Patient Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Details
@@ -346,14 +322,8 @@ const ManageDevices: React.FC = () => {
                         {device.is_assigned ? "Assigned" : "Unassigned"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${getAssignedColor(
-                          device.assigned_to
-                        )}`}
-                      >
-                        {getPatientNameById(device.assigned_to)}
-                      </span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {device.patient_name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
