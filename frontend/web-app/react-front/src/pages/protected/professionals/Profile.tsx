@@ -158,7 +158,7 @@ const ProfileProfessionals: React.FC = () => {
                 <div className="mt-5 max-w-screen-md">
                   <Card className="p-5">
                     <div className="mt-5">
-                      <label htmlFor="name">Institution name</label>
+                      <label htmlFor="name">Name</label>
                       <Input
                         type="text"
                         value={professional.name}
