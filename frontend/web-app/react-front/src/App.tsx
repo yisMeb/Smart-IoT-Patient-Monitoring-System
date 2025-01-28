@@ -11,6 +11,7 @@ import ManageDevices from "./pages/protected/ManageDevices";
 import ProtectedRoute from "./context/ProtectedRoute";
 import ManageProfessionals from "./pages/protected/ManageProfessionals";
 import Profile from "./pages/protected/Profile";
+import ProfileProfessionals from "./pages/protected/professionals/Profile";
 import ProfessionalDashboard from "./pages/protected/professionals/ProfessionalDashboard";
 import Alerts from "./pages/protected/professionals/Alerts";
 
@@ -71,7 +72,7 @@ function App() {
         <Route
             path="/professionals/dashboard"
             element={
-              <ProtectedRoute requiredRole="professional"> {/* professionals */}
+              <ProtectedRoute requiredRole="professional"> 
                 <ProfessionalDashboard/>
               </ProtectedRoute>
             }
@@ -79,7 +80,7 @@ function App() {
           <Route
             path="/professionals/patients"
             element={
-              <ProtectedRoute requiredRole="professional"> {/* professionals */}
+              <ProtectedRoute requiredRole="professional"> 
                 <ManagePatients/>
               </ProtectedRoute>
             }
@@ -87,8 +88,16 @@ function App() {
           <Route
             path="/professionals/alert"
             element={
-              <ProtectedRoute requiredRole="professional"> {/* professionals */}
+              <ProtectedRoute requiredRole="professional"> 
                 <Alerts/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professionals/profile"
+            element={
+              <ProtectedRoute requiredRole="professional"> 
+                <ProfileProfessionals/>
               </ProtectedRoute>
             }
           />

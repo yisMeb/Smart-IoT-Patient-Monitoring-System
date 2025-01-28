@@ -1,4 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState, useCallback } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -7,38 +8,79 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { fetchPatientAlertTable } from "../../../service/api"; // Adjust the import path as needed
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, Loader2 } from "lucide-react";
 
-const sampleData = [
-    {
-      id: 1,
-      name: "Martha Abebe",
-      date: "2024-05-15",
-      alert: "Heart rate below threshold: 80 bpm",
-      status: "Not normal",
-      contact: "0912345678",
-    },
-    {
-      id: 2,
-      name: "John Doe",
-      date: "2024-07-20",
-      alert: "Blood pressure reading high: 150/95 mmHg",
-      status: "normal",
-      contact: "0912345678",
-    },
-    {
-      id: 3,
-      name: "Jane Smith",
-      date: "2025-01-30", 
-      alert: "Temperature elevated: 40°C",
-      status: "normal",
-      contact: "0912345678",
-    },
-];
+type Alert = {
+  id: number;
+  message: string;
+  name: string;
+  contact_number: string;
+  timestamp: string;
+};
 
 export const AlertTable = () => {
-    return (
-      <Card>
-        <CardContent>
+  const [data, setData] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetchPatientAlertTable(navigate);
+      console.log("Fetched data:", response);
+
+      if (Array.isArray(response)) {
+        setData(response);
+      } else {
+        console.error("Unexpected response format:", response);
+        setError("Unexpected data format received from the server");
+        setData([]);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("An unknown error occurred");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleRefresh = () => {
+    fetchData();
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row justify-between items-center">
+        <span>Patient Alerts</span>
+        <Button
+          onClick={handleRefresh}
+          disabled={loading}
+          variant="outline"
+          size="icon"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-500">{error}</div>
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -48,28 +90,31 @@ export const AlertTable = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sampleData.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">
-                    {row.name} <br />
-                    <span className="text-gray-400 font-normal">{row.contact}</span>
-                  </TableCell>
-                  <TableCell>{row.date}</TableCell>
-                  <TableCell> 
-                      <div 
-                        className={`border rounded-md w-fit p-1 ${
-                          row.status === "normal" ? "bg-[#fff5f8] border-[#f1416c] text-[#f1416c]" : "bg-[#eef6ff] border-[#3e97ff] text-[#3e97ff]"
-                        }`}
-                      >
-                        {row.alert}
-                      </div>
+              {data.length > 0 ? (
+                data.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">
+                      {row.name} <br />
+                      <span className="text-gray-400 font-normal">
+                        {row.contact_number}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(row.timestamp).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">
+                    No patient alerts found
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
-    );
-  };
-  
+        )}
+      </CardContent>
+    </Card>
+  );
+};

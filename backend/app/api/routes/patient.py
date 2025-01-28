@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.api.models.patient_models import PatientCreate, PatientUpdate
-from app.api.services.patient_services import create_patient_service, delete_patient_service, read_all_patients_service, read_patient_service, update_patient_service
+from app.api.services.patient_services import create_patient_service, delete_patient_service, read_all_patients_Alerts, read_all_patients_service, read_patient_service, update_patient_service
 from app.config.database import get_db_conn
 from app.api.dependacies import get_current_user
 
@@ -40,6 +40,14 @@ async def delete_patient(patient_id: str, db = Depends(get_db_conn)):
 async def get_all_patients(db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
     if current_user["user_role"] == "institution":
         patients = await read_all_patients_service(db)
+        return patients
+    else:
+        raise HTTPException(status_code=401, detail="Only admin can access this feature")
+    
+@router.get("/PatientAlert/{professional_id}")
+async def get_patient_alerts(professional_id: str, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
+    if current_user["user_role"] == "professional":
+        patients = await read_all_patients_Alerts(professional_id, db)
         return patients
     else:
         raise HTTPException(status_code=401, detail="Only admin can access this feature")
