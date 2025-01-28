@@ -12,8 +12,16 @@ class PatientCreate(BaseModel):
     status: str
     address: Optional[str]  
     device_id: UUID
+    oxygen_threshold: float
+    heartrate_threshold: float
+    temperature_threshold: float
+    oxygen_threshold_lower: float
+    heartrate_threshold_lower: float
+    temperature_threshold_lower: float
+    professional_id: str
     class Config:
         from_attributes = True
+
 
 class PatientUpdate(BaseModel):
     name: str

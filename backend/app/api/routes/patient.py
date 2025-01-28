@@ -15,7 +15,7 @@ async def create_patient(patient: PatientCreate, db = Depends(get_db_conn), curr
         raise HTTPException(status_code=401, detail="Only admin can access this feature")
 
 @router.put("/edit/{patient_id}", response_model=dict)
-async def patient_update(patient_id: int, patient: PatientUpdate, db = Depends(get_db_conn)):
+async def patient_update(patient_id: str, patient: PatientUpdate, db = Depends(get_db_conn)):
     patient_record = await update_patient_service(patient_id, patient, db)
     if patient_record is None:
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -23,14 +23,14 @@ async def patient_update(patient_id: int, patient: PatientUpdate, db = Depends(g
 
 
 @router.get("/get/{patient_id}")
-async def get_patient(patient_id: int, db = Depends(get_db_conn)):
+async def get_patient(patient_id: str, db = Depends(get_db_conn)):
     patient = await read_patient_service(patient_id, db)
     if patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
     return patient
 
 @router.delete("/delete/{patient_id}")
-async def delete_patient(patient_id: int, db = Depends(get_db_conn)):
+async def delete_patient(patient_id: str, db = Depends(get_db_conn)):
     result = await delete_patient_service(patient_id, db)
     if result is None:
         raise HTTPException(status_code=404, detail="Patient not found")

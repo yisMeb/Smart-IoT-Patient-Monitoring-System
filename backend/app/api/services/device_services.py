@@ -8,7 +8,7 @@ async def add_devices(data: AddDevice , db: asyncpg.Connection):
         query ='''
             INSERT INTO public."device"(device_name, is_assigned)
             VALUES($1, $2)
-            RETURNING data_id, assigned_to
+            RETURNING deviceid
         '''
         device_data = await db.fetchrow(
             query,
@@ -19,23 +19,23 @@ async def add_devices(data: AddDevice , db: asyncpg.Connection):
         if not device_data:
             raise HTTPException(status_code=500, detail="Failed to insert device data")
 
-        return device_data
+        return dict(device_data)
     
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
     except asyncpg.PostgresError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
     
-async def update_device(device_id: int, device_data: UpdateDevice, db: asyncpg.Connection):
+async def update_device(device_id: str, device_data: UpdateDevice, db: asyncpg.Connection):
     query = """
     UPDATE public."device"
     SET device_name = $1, is_assigned = $2
-    WHERE device_id = $3
-    RETURNING device_id
+    WHERE deviceid = $3
+    RETURNING deviceid
     """
     values = (device_data.device_name, device_data.is_assigned, device_id)
     record = await db.fetchrow(query, *values)
-    return record
+    return dict(record)
 
 async def read_all(db: asyncpg.Connection):
     query = """

@@ -66,27 +66,7 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
             )
         if not record:
             raise HTTPException(status_code=500, detail="Failed to insert patient data")
-        check_device = """
-            SELECT is_assigned, assigned_to
-            FROM public.device
-            WHERE deviceid = $1
-        """
-        device_status = await db.fetchrow(check_device, patient.device_id)
-
-        if device_status["is_assigned"]:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Device {patient.device_id} is already assigned to patient {device_status['assigned_to']}"
-            )
-            
-        #assign device to the patient
-        update_query = """
-            UPDATE public.device
-            SET is_assigned = TRUE, assigned_to = $1
-            WHERE deviceid = $2
-        """
-        await db.execute(update_query, record["patient_id"], patient.device_id)
-       
+        
        #send email to patient
         firebase_user = await create_firebase_user(patient.email)
         auth.set_custom_user_claims(firebase_user.uid, {"isTemporaryPassword": True}) #this will be set to false when user resets password
@@ -109,7 +89,7 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
     except asyncpg.PostgresError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
     
-async def read_patient_service(patient_id: int, db: asyncpg.Connection):
+async def read_patient_service(patient_id: str, db: asyncpg.Connection):
     query = """
     SELECT patient_id, institution_id, name, dob, contact_number, email, address, created_at
     FROM patients
@@ -126,7 +106,7 @@ async def read_all_patients_service(db: asyncpg.Connection):
     patients = await db.fetch(query)
     return patients
 
-async def update_patient_service(patient_id: int, patient: PatientUpdate, db: asyncpg.Connection):
+async def update_patient_service(patient_id: str, patient: PatientUpdate, db: asyncpg.Connection):
     try:
         validate_input({
             "name": patient.name,
@@ -144,14 +124,8 @@ async def update_patient_service(patient_id: int, patient: PatientUpdate, db: as
             email = $4, 
             address = $5, 
             status = $6,
-            oxygen_threshold = $7,
-            heartrate_threshold = $8,
-            temperature_threshold = $9,
-            oxygen_threshold_lower = $10,
-            heartrate_threshold_lower = $11,
-            temperature_threshold_lower = $12,
-            professional_id = $13
-        WHERE patient_id = $14
+            professional_id = $7
+        WHERE patient_id = $8
         RETURNING 
             patient_id, 
             institution_id, 
@@ -162,12 +136,6 @@ async def update_patient_service(patient_id: int, patient: PatientUpdate, db: as
             address, 
             created_at, 
             status,
-            oxygen_threshold,
-            heartrate_threshold,
-            temperature_threshold,
-            oxygen_threshold_lower,
-            heartrate_threshold_lower,
-            temperature_threshold_lower,
             professional_id
         """
         
@@ -178,12 +146,6 @@ async def update_patient_service(patient_id: int, patient: PatientUpdate, db: as
             patient.email, 
             patient.address, 
             patient.status,
-            patient.oxygen_threshold,
-            patient.heartrate_threshold,
-            patient.temperature_threshold,
-            patient.oxygen_threshold_lower,
-            patient.heartrate_threshold_lower,
-            patient.temperature_threshold_lower,
             patient.professional_id,
             patient_id
         )
@@ -193,14 +155,14 @@ async def update_patient_service(patient_id: int, patient: PatientUpdate, db: as
         if not patient_record:
             raise HTTPException(status_code=404, detail="Patient not found")
         
-        return patient_record
+        return dict(patient_record)
     
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
     except asyncpg.PostgresError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
-async def delete_patient_service(patient_id: int, db: asyncpg.Connection):
+async def delete_patient_service(patient_id: str, db: asyncpg.Connection):
     query = """
     DELETE FROM patients
     WHERE patient_id = $1

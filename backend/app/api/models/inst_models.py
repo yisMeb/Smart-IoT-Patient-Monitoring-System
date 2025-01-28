@@ -5,9 +5,12 @@ from typing import Optional
 class InstitutionCreate(BaseModel):
     name: str
     address: str
-    contact_number: str
-
+    email: str
+    class Config:
+        from_attributes = True
 class InstitutionUpdate(BaseModel):
     name: str
     address: str
-    contact_number: str
+    email: str
+    class Config:
+        from_attributes = True

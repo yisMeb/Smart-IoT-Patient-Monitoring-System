@@ -14,7 +14,7 @@ async def create_device(device: AddDevice, db = Depends(get_db_conn), current_us
         raise HTTPException(status_code=401, detail="Only admin can access this feature")
 
 @router.put("/edit/{device_id}", response_model=dict)
-async def device_update(device_id: int, device: UpdateDevice, db = Depends(get_db_conn)):
+async def device_update(device_id: str, device: UpdateDevice, db = Depends(get_db_conn)):
     record = await update_device(device_id, device, db)
     if record is None:
         raise HTTPException(status_code=404, detail="Patient not found")
