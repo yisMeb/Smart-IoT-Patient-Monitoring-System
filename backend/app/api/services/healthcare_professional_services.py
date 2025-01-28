@@ -68,9 +68,18 @@ async def add_healthcare_professional(professional: CreateHealthcareProfessional
 
 async def get_healthcare_professionals(db: asyncpg.Connection):
     try:
-        # Fetch all professionals from the healthcare_professionals table
         rows = await db.fetch('SELECT * FROM public."healthcare_professionals"')
         return [dict(row) for row in rows]
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+async def get_healthcare_professional_by_ID(db: asyncpg.Connection, Professional_id: str):
+    try:
+        row = await db.fetch('SELECT * FROM public."healthcare_professionals" where professional_id = $1', Professional_id)
+        if not row:
+            return []
+        return row
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

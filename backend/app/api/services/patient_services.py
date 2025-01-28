@@ -106,6 +106,47 @@ async def read_all_patients_service(db: asyncpg.Connection):
     patients = await db.fetch(query)
     return patients
 
+
+async def read_all_patients_Alerts(professional_id: str, db: asyncpg.Connection):
+    try:
+        query = """
+        SELECT 
+            name,
+            contact_number,
+            oxygen_threshold_lower || ' - ' || oxygen_threshold AS oxygen_thresholds,
+            heartrate_threshold_lower || ' - ' || heartrate_threshold AS heartrate_thresholds,
+            temperature_threshold_lower || ' - ' || temperature_threshold AS temperature_thresholds,
+            CASE 
+                WHEN device_id IS NOT NULL THEN 'assigned'
+                ELSE 'not assigned'
+            END AS device_status,
+            status
+        FROM 
+            public.patients
+        WHERE 
+            professional_id = $1;
+        """
+        
+        patients = await db.fetch(query, professional_id)
+        
+        if not patients:
+            return {"message": "No patients found for the given institution ID."}
+        
+        return patients
+
+    except asyncpg.PostgresError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred: {str(e)}"
+        )
+    
+
 async def update_patient_service(patient_id: str, patient: PatientUpdate, db: asyncpg.Connection):
     try:
         validate_input({

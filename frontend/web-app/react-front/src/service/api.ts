@@ -8,20 +8,22 @@ import {
 import { useNavigate } from "react-router-dom";
 import { body } from "framer-motion/client";
 import { sendResetPasswordEmail } from "./emailService";
+import { format } from "date-fns";
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
-const Assigned_PATIENT = import.meta.env
-  .VITE_API_GET_ASSIGNED_PATIENT as string;
+const Assigned_PATIENT = import.meta.env.VITE_API_GET_ASSIGNED_PATIENT as string;
+const PROFESSIONALBYID = import.meta.env.VITE_API_GET_PROFESSIONAL_BY_ID as string;
 const ADD_PATIENT = import.meta.env.VITE_API_ADD_PATIENT as string;
 const UPDATE_PATIENT = import.meta.env.VITE_API_UPDATE_PATIENT as string;
 
 const All_PROFESSIONALS = import.meta.env
   .VITE_API_GET_ALL_PROFESSIONALS as string;
-const UPDATE_PROFESSIONAL = import.meta.env
-  .VITE_API_UPDATE_PROFESSIONAL as string;
+const UPDATE_PROFESSIONAL = import.meta.env.VITE_API_UPDATE_PROFESSIONAL as string;
 const ADD_PROFESSIONAL = import.meta.env.VITE_API_ADD_PROFESSIONAL as string;
 
 const ALL_DEVICES = import.meta.env.VITE_API_GET_ALL_DEVICES as string;
+const PATIENT_ALERT = import.meta.env.VITE_API_PATIENT_ALERT as string;
+const PATIENT_ALERT_Table = import.meta.env.VITE_API_PATIENT_ALERT_Table as string;
 const ADD_DEVICE = import.meta.env.VITE_API_ADD_DEVICE as string;
 const UPDATE_DEVICE = import.meta.env.VITE_API_UPDATE_DEVICE as string;
 
@@ -130,6 +132,30 @@ export const fetchAssingnedPatients = async (
   }
 };
 
+export const fetchProfessionalByID = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+    if (!auth || !role) return;
+
+    const response = await fetch(`${PROFESSIONALBYID}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch patients:", error);
+    throw error;
+  }
+};
+
 export const fetchAllProfessionals = async (
   navigate: ReturnType<typeof useNavigate>
 ) => {
@@ -172,6 +198,70 @@ export const fetchAllDevices = async (
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch devices:", error);
+    throw error;
+  }
+};
+
+export const fetchPatientAlert = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+    if (!auth) return;
+
+    const response = await fetch(`${PATIENT_ALERT}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch devices:", error);
+    throw error;
+  }
+};
+
+export const fetchPatientAlertTable = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+    if (!auth) return;
+
+    const response = await fetch(`${PATIENT_ALERT_Table}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (!data || (data.detail && data.detail.includes("No alerts found"))) {
+      return { message: "No alerts available for the given professional ID." };
+    }
+
+    if (Array.isArray(data)) {
+      data.forEach((item) => {
+        if (item.timestamp) {
+          item.timestamp = format(new Date(item.timestamp), "yyyy-MM-dd");
+        }
+      });
+    } else if (data.timestamp) {
+      data.timestamp = format(new Date(data.timestamp), "yyyy-MM-dd");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch patient alert table:", error);
     throw error;
   }
 };

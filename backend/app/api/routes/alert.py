@@ -11,7 +11,6 @@ router = APIRouter()
 
 @router.get("/notifications/patient/{id}")
 async def notifications(id: str, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
-    # Get id from token and pass that
     if current_user["user_role"] == "patient":
         return await fetch_notifications_by_id(id, db)
     else:
@@ -21,7 +20,6 @@ async def notifications(id: str, db = Depends(get_db_conn), current_user: dict =
 @router.get("/notifications/doctor/{id}")
 async def doctors_notifications(id: str, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
     if current_user["user_role"] == "professional":
-        # Get id from token and pass that 
         return await fetch_notifications_by_proffesional(id, db)
     else:
         raise HTTPException(status_code=401, detail="Only institution users can access this feature.")

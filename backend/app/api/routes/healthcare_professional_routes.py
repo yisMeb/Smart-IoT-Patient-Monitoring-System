@@ -3,6 +3,7 @@ from app.api.services.healthcare_professional_services import (
     add_healthcare_professional,
     assigned_patients,
     delete_healthcare_professionals,
+    get_healthcare_professional_by_ID,
     get_healthcare_professionals,
     update_healthcare_professional,
 )
@@ -37,6 +38,14 @@ async def fetch_professionals(
     else :
         raise HTTPException(status_code=401, detail="Only admin can access this feature")
 
+@router.get("/fetch/{professional_id}")
+async def fetch_professionals(professional_id:str ,current_user: dict = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db_conn),
+):
+    if current_user["user_role"] == "institution" or current_user["user_role"] == "professional":
+        return await get_healthcare_professional_by_ID(db, professional_id)
+    else :
+        raise HTTPException(status_code=401, detail="Only admin can access this feature")
+
     
 @router.delete("/delete")
 async def delete_professionals(
@@ -59,7 +68,7 @@ async def delete_professionals(
 
 @router.put("/update/{professional_id}")
 async def update_professional(professional_id: str, updates: UpdateHealthcareProfessional,db: asyncpg.Connection = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
-    if current_user["user_role"] == "institution":
+    if current_user["user_role"] == "institution" or current_user["user_role"] == "professional":
         return await update_healthcare_professional(db, professional_id, updates)
     else:
         raise HTTPException(status_code=401, detail="Only institution users can edit.")
