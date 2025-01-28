@@ -13,6 +13,7 @@ import { format } from "date-fns";
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
 const Assigned_PATIENT = import.meta.env.VITE_API_GET_ASSIGNED_PATIENT as string;
 const PROFESSIONALBYID = import.meta.env.VITE_API_GET_PROFESSIONAL_BY_ID as string;
+const INSTITUTEBYID = import.meta.env.VITE_API_GET_INSTITUTE_BY_ID as string;
 const ADD_PATIENT = import.meta.env.VITE_API_ADD_PATIENT as string;
 const UPDATE_PATIENT = import.meta.env.VITE_API_UPDATE_PATIENT as string;
 
@@ -26,10 +27,10 @@ const PATIENT_ALERT = import.meta.env.VITE_API_PATIENT_ALERT as string;
 const PATIENT_ALERT_Table = import.meta.env.VITE_API_PATIENT_ALERT_Table as string;
 const ADD_DEVICE = import.meta.env.VITE_API_ADD_DEVICE as string;
 const UPDATE_DEVICE = import.meta.env.VITE_API_UPDATE_DEVICE as string;
+const UPDATE_PROVIDER = import.meta.env.VITE_API_UPDATE_PROVIDER as string;
 
 const token = getIdTokenFromCookies();
-//const role = getRoleFromCookies();
-//const roleSpecificId = getRoleIDFromCookie();
+
 interface Professional {
   professional_id: string;
   institution_id: string;
@@ -38,6 +39,12 @@ interface Professional {
   contact_number: string;
   email: string;
   created_at: string;
+}
+
+interface Provider{
+  name: string;
+  address: string;
+  email: string;
 }
 
 interface Patient {
@@ -141,6 +148,30 @@ export const fetchProfessionalByID = async (
     if (!auth || !role) return;
 
     const response = await fetch(`${PROFESSIONALBYID}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch patients:", error);
+    throw error;
+  }
+};
+
+export const fetchInstitutionByID = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+    if (!auth || !role) return;
+
+    const response = await fetch(`${INSTITUTEBYID}/${role}`, {
       method: "GET",
       headers: auth.headers,
     });
@@ -276,6 +307,32 @@ export const updateProfessional = async (
     if (!auth) return;
 
     const response = await fetch(`${UPDATE_PROFESSIONAL}/${professionalId}`, {
+      method: "PUT",
+      headers: auth.headers,
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to update professional:", error);
+    throw error;
+  }
+};
+
+export const updateProviders = async (
+  navigate: ReturnType<typeof useNavigate>,
+  P_ID: string,
+  updates: Partial<Provider>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
+    const response = await fetch(`${UPDATE_PROVIDER}/${P_ID}`, {
       method: "PUT",
       headers: auth.headers,
       body: JSON.stringify(updates),

@@ -198,17 +198,3 @@ async def fetch_Institution_by_id(id: str, db: asyncpg.Connection):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-async def update_institutes(db: asyncpg.Connection, id: str, updates: InstituteUpdate):
-    await fetch_Institution_by_id(id, db) #check if the user exists
-    try:
-        await db.execute('''
-            UPDATE public."institutions"
-            SET name = $1, address = $2, email = $3
-            WHERE institution_id = $4
-        ''', updates.name, updates.address, updates.email, id)
-
-        return {"message": "Institution updated successfully."}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    
