@@ -43,7 +43,6 @@ interface DeviceWithPatient extends Device {
 const ManageDevices: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [patients, setPatients] = useState<Patient[]>([]);
   const [devices, setDevices] = useState<DeviceWithPatient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +77,7 @@ const ManageDevices: React.FC = () => {
 
         setDevices(devicesWithPatientNames);
         setPatients(patientsData); // Suppress unused warning
+        console.log(patients);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
         setIsErrorModalOpen(true); // Show error modal
