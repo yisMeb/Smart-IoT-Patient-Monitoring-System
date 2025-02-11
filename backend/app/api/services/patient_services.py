@@ -210,4 +210,28 @@ async def delete_patient_service(patient_id: str, db: asyncpg.Connection):
     RETURNING patient_id
     """
     result = await db.fetchrow(query, patient_id)
+   
     return result
+
+async def patients_for_professional(professional_id: str, db: asyncpg.Connection):
+    query = """
+    SELECT *
+    FROM patients
+    WHERE professional_id = $1
+    ORDER BY created_at
+    """
+    patients = await db.fetch(query, professional_id)
+    if not patients:
+        return []
+
+    patient_data = []
+    for patient in patients:
+        patient_dict = dict(patient)
+        created_at = patient_dict['created_at']
+        formatted_created_at = created_at.strftime("%Y-%m-%d %H:%M:%S")
+        patient_dict['created_at'] = formatted_created_at
+        patient_data.append(patient_dict)
+    
+    return patient_data
+
+    

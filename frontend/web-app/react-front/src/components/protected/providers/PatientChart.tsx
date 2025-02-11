@@ -1,5 +1,4 @@
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -9,9 +8,10 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import { DateRange } from "react-day-picker";
 import { useState, useEffect } from "react";
 
+/* import { CalendarIcon } from "lucide-react";
+import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -19,16 +19,16 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/popover";  */
 import { fetchAllPatient } from "@/service/api";
 import type { ChartData } from "../../../types/dashboard";
 import { useNavigate } from "react-router-dom";
 
 export const PatientChart = () => {
-  const [date, setDate] = useState<DateRange | undefined>({
+ /*  const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(2023, 0, 4),
     to: new Date(2024, 11, 10),
-  });
+  }); */
 
   const [data, setData] = useState<ChartData[]>([]);
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ export const PatientChart = () => {
           <h3 className="text-xl font-semibold">Patient Admitted</h3>
           <p className="text-gray-500">days</p>
         </div>
-        <Popover>
+        {/* <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -103,7 +103,7 @@ export const PatientChart = () => {
               numberOfMonths={2}
             />
           </PopoverContent>
-        </Popover>
+        </Popover> */}
       </div>
       <div className="h-[430px]">
       {data.length > 0 ? (

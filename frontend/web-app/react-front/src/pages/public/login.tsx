@@ -55,6 +55,8 @@ export default function Login() {
               navigate("/institutes/h-provider");
             } else if (user_role === "professional") {
               navigate("/professionals/dashboard");
+            } else if (user_role === "patient") {
+              navigate("/patients/dashboard");
             }
           } catch (error) {
             console.error("Error fetching user data: try logging in", error);
@@ -137,8 +139,8 @@ export default function Login() {
               navigate("/institutes/h-provider");
             } else if (user_role === "professional") {
               navigate("/professionals/dashboard");
-            } else if (user_role === "admin") {
-              navigate("/admin");
+            } else if (user_role === "patient") {
+              navigate("/patients/dashboard");
             }
           }
           setRole(user_role);
