@@ -11,24 +11,32 @@ import { sendResetPasswordEmail } from "./emailService";
 import { format } from "date-fns";
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
-const Assigned_PATIENT = import.meta.env.VITE_API_GET_ASSIGNED_PATIENT as string;
+const Assigned_PATIENT = import.meta.env
+  .VITE_API_GET_ASSIGNED_PATIENT as string;
 const ALL_RESOLVED_ALERT = import.meta.env.VITE_API_ALL_RESOLVED as string;
 const ALL_UNRESOLVED_ALERT = import.meta.env.VITE_API_ALL_UNRESOLVED as string;
-const PROFESSIONALBYID = import.meta.env.VITE_API_GET_PROFESSIONAL_BY_ID as string;
+const PROFESSIONALBYID = import.meta.env
+  .VITE_API_GET_PROFESSIONAL_BY_ID as string;
 const INSTITUTEBYID = import.meta.env.VITE_API_GET_INSTITUTE_BY_ID as string;
 const ADD_PATIENT = import.meta.env.VITE_API_ADD_PATIENT as string;
 const UPDATE_PATIENT = import.meta.env.VITE_API_UPDATE_PATIENT as string;
 
-const All_PROFESSIONALS = import.meta.env.VITE_API_GET_ALL_PROFESSIONALS as string;
-const UPDATE_PROFESSIONAL = import.meta.env.VITE_API_UPDATE_PROFESSIONAL as string;
+const All_PROFESSIONALS = import.meta.env
+  .VITE_API_GET_ALL_PROFESSIONALS as string;
+const UPDATE_PROFESSIONAL = import.meta.env
+  .VITE_API_UPDATE_PROFESSIONAL as string;
 const ADD_PROFESSIONAL = import.meta.env.VITE_API_ADD_PROFESSIONAL as string;
 const ALL_DEVICES = import.meta.env.VITE_API_GET_ALL_DEVICES as string;
 const PATIENT_ALERT = import.meta.env.VITE_API_PATIENT_ALERT as string;
 const ALL_ALERT_PRO = import.meta.env.VITE_API_TOTAL_ALERT_PRO as string;
-const RESOLVED_ALERT_PRO = import.meta.env.VITE_API_RESOLVED_ALERT_PRO as string;
-const UNRESOLVED_ALERT_PRO = import.meta.env.VITE_API_UNRESOLVED_ALERT_PRO as string;
-const PATIENT_ALERT_Table = import.meta.env.VITE_API_PATIENT_ALERT_Table as string;
-const PATIENT_ASSIGN_hISTORY = import.meta.env.VITE_API_PATIENT_ASSIGN_hISTORY as string;
+const RESOLVED_ALERT_PRO = import.meta.env
+  .VITE_API_RESOLVED_ALERT_PRO as string;
+const UNRESOLVED_ALERT_PRO = import.meta.env
+  .VITE_API_UNRESOLVED_ALERT_PRO as string;
+const PATIENT_ALERT_Table = import.meta.env
+  .VITE_API_PATIENT_ALERT_Table as string;
+const PATIENT_ASSIGN_hISTORY = import.meta.env
+  .VITE_API_PATIENT_ASSIGN_hISTORY as string;
 const ADD_DEVICE = import.meta.env.VITE_API_ADD_DEVICE as string;
 const UPDATE_DEVICE = import.meta.env.VITE_API_UPDATE_DEVICE as string;
 const UPDATE_PROVIDER = import.meta.env.VITE_API_UPDATE_PROVIDER as string;
@@ -45,7 +53,7 @@ interface Professional {
   created_at: string;
 }
 
-interface Provider{
+interface Provider {
   name: string;
   address: string;
   email: string;
@@ -119,7 +127,9 @@ export const fetchAllPatient = async (
   }
 };
 
-export const AllResolvedAlert = async (navigate: ReturnType<typeof useNavigate>) => {
+export const AllResolvedAlert = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
     const role = getRoleIDFromCookie();
@@ -134,7 +144,7 @@ export const AllResolvedAlert = async (navigate: ReturnType<typeof useNavigate>)
     if (!response.ok) {
       const errorData = await response.json();
       if (errorData.detail === "Not Found") {
-        return []; 
+        return [];
       }
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
@@ -142,11 +152,13 @@ export const AllResolvedAlert = async (navigate: ReturnType<typeof useNavigate>)
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch resolved alerts:", error);
-    return []; 
+    return [];
   }
 };
 
-export const AllUnResolvedAlert = async (navigate: ReturnType<typeof useNavigate>) => {
+export const AllUnResolvedAlert = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
     const role = getRoleIDFromCookie();
@@ -161,7 +173,7 @@ export const AllUnResolvedAlert = async (navigate: ReturnType<typeof useNavigate
     if (!response.ok) {
       const errorData = await response.json();
       if (errorData.detail === "Not Found") {
-        return []; 
+        return [];
       }
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
@@ -169,10 +181,9 @@ export const AllUnResolvedAlert = async (navigate: ReturnType<typeof useNavigate
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch unresolved alerts:", error);
-    return []; 
+    return [];
   }
 };
-
 
 export const fetchAssingnedPatients = async (
   navigate: ReturnType<typeof useNavigate>
@@ -328,7 +339,7 @@ export const fetchAllAlertProfess = async (
       method: "GET",
       headers: auth.headers,
     });
-   
+
     if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
@@ -445,18 +456,17 @@ export const fetchPatientAssignmentHistory = async (
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
 
-    const data  = await response.json();
+    const data = await response.json();
 
     if (!data.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
-    return data ;
+    return data;
   } catch (error) {
     console.error("Failed to fetch patient assignment history:", error);
     throw error;
   }
 };
-
 
 export const updateProfessional = async (
   navigate: ReturnType<typeof useNavigate>,
@@ -513,12 +523,14 @@ export const updateProviders = async (
 export const addProfessional = async (
   navigate: ReturnType<typeof useNavigate>,
   professional: {
+    institution_id: string;
     name: string;
     specialization: string;
     contact_number: string;
     email: string;
   }
 ) => {
+  console.log(professional);
   try {
     const auth = checkAuthAndGetHeaders(navigate);
     if (!auth) return;
@@ -676,5 +688,3 @@ export const addDevice = async (device: {
     throw error;
   }
 };
-
-
