@@ -1,5 +1,3 @@
-
-
 import asyncpg
 from fastapi import HTTPException
 from pydantic import ValidationError 
@@ -9,7 +7,8 @@ async def fetch_notifications_by_id(id: str , db: asyncpg.Connection):
         query ='''
             SELECT *
             FROM public.alert
-            WHERE patient_id = $1;
+            WHERE patient_id = $1
+            ORDER BY "timestamp" DESC;
         '''
         device_data = await db.fetch(
             query,

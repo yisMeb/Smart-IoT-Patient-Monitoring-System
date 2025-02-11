@@ -13,18 +13,30 @@ import { format } from "date-fns";
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
 const Assigned_PATIENT = import.meta.env
   .VITE_API_GET_ASSIGNED_PATIENT as string;
+=======
+const PATIENT_BY_ID = import.meta.env.VITE_API_GET_PATIENT_BY_ID as string;
+const NOTIFICATION_BY_ID = import.meta.env.VITE_API_NOTIFICATION_BY_ID as string;
+const Assigned_PATIENT = import.meta.env.VITE_API_GET_ASSIGNED_PATIENT as string;
+>>>>>>> Stashed changes
 const ALL_RESOLVED_ALERT = import.meta.env.VITE_API_ALL_RESOLVED as string;
+const PATIENT_TRESHOLD = import.meta.env.VITE_API_PATIENT_TRESHOLD as string;
+const NEW_HEALTH_DATA = import.meta.env.VITE_API_NEW_HEALTH_DATA as string;
 const ALL_UNRESOLVED_ALERT = import.meta.env.VITE_API_ALL_UNRESOLVED as string;
 const PROFESSIONALBYID = import.meta.env
   .VITE_API_GET_PROFESSIONAL_BY_ID as string;
 const INSTITUTEBYID = import.meta.env.VITE_API_GET_INSTITUTE_BY_ID as string;
 const ADD_PATIENT = import.meta.env.VITE_API_ADD_PATIENT as string;
 const UPDATE_PATIENT = import.meta.env.VITE_API_UPDATE_PATIENT as string;
+<<<<<<< Updated upstream
 
 const All_PROFESSIONALS = import.meta.env
   .VITE_API_GET_ALL_PROFESSIONALS as string;
 const UPDATE_PROFESSIONAL = import.meta.env
   .VITE_API_UPDATE_PROFESSIONAL as string;
+=======
+const All_PROFESSIONALS = import.meta.env.VITE_API_GET_ALL_PROFESSIONALS as string;
+const UPDATE_PROFESSIONAL = import.meta.env.VITE_API_UPDATE_PROFESSIONAL as string;
+>>>>>>> Stashed changes
 const ADD_PROFESSIONAL = import.meta.env.VITE_API_ADD_PROFESSIONAL as string;
 const ALL_DEVICES = import.meta.env.VITE_API_GET_ALL_DEVICES as string;
 const PATIENT_ALERT = import.meta.env.VITE_API_PATIENT_ALERT as string;
@@ -40,6 +52,9 @@ const PATIENT_ASSIGN_hISTORY = import.meta.env
 const ADD_DEVICE = import.meta.env.VITE_API_ADD_DEVICE as string;
 const UPDATE_DEVICE = import.meta.env.VITE_API_UPDATE_DEVICE as string;
 const UPDATE_PROVIDER = import.meta.env.VITE_API_UPDATE_PROVIDER as string;
+const GET_CASE= import.meta.env.VITE_API_CASE as string;
+const POST_CASE= import.meta.env.VITE_API_CASE_POST as string;
+const CONTACT_PROFESSIONAL= import.meta.env.VITE_API_CONTACT_PROFESSIONAL as string;
 
 const token = getIdTokenFromCookies();
 
@@ -84,6 +99,13 @@ interface Device {
   device_name: string;
   is_assigned: boolean;
 }
+
+interface Case {
+  patient_id: string;
+  remark: string;
+  professional_id: string;
+}
+
 
 const checkAuthAndGetHeaders = (navigate: ReturnType<typeof useNavigate>) => {
   const token = getIdTokenFromCookies();
@@ -580,6 +602,8 @@ export const updatePatient = async (
   }
 };
 
+
+
 export const addPatient = async (
   navigate: ReturnType<typeof useNavigate>,
   patient: {
@@ -688,3 +712,200 @@ export const addDevice = async (device: {
     throw error;
   }
 };
+<<<<<<< Updated upstream
+=======
+
+
+export const fetchPatientTreshold = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+
+    if (!auth) return [];
+
+    const response = await fetch(`${PATIENT_TRESHOLD}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {      
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch resolved alerts:", error);
+    throw error;
+  }
+};
+
+export const fetchNewHealthData= async (
+  navigate: ReturnType<typeof useNavigate>,
+  device_id: string
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+
+    if (!auth) return [];
+
+    const response = await fetch(`${NEW_HEALTH_DATA}/${device_id}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {      
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch resolved alerts:", error);
+    throw error;
+  }
+};
+
+
+export const fetchPatient_BY_ID = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+
+    if (!auth) return;
+
+    const response = await fetch(`${PATIENT_BY_ID}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch patients:", error);
+    throw error;
+  }
+}
+
+export const fetchNewNotifications = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+
+    if (!auth) return;
+
+    const response = await fetch(`${NOTIFICATION_BY_ID}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    const notifications = await response.json();
+
+    // Return only the latest 6 notifications
+    return notifications.slice(0, 6);
+  } catch (error) {
+    console.error("Failed to fetch notifications:", error);
+    throw error;
+  }
+}
+
+export const fetchCase = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+
+    if (!auth) return;
+
+    const response = await fetch(`${GET_CASE}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      if (errorData.detail === "Not Found") {
+        return []; 
+      }
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch notifications:", error);
+    throw error;
+  }
+}
+
+
+
+
+export const postCase = async (
+  navigate: ReturnType<typeof useNavigate>,
+  caseData: Case
+): Promise<Case> => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) {
+      throw new Error("Unauthorized: No authentication headers found.");
+    }
+
+    const response = await fetch(POST_CASE, {
+      method: "POST",
+      headers: {
+        ...auth.headers,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(caseData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error: ${response.status} - ${response.statusText} - ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to post case:", error);
+    throw error;
+  }
+};
+
+export const ContactProff = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    const role = getRoleIDFromCookie();
+
+    if (!auth) return;
+
+    const response = await fetch(`${CONTACT_PROFESSIONAL}/${role}`, {
+      method: "GET",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {      
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch notifications:", error);
+    throw error;
+  }
+}
+>>>>>>> Stashed changes
