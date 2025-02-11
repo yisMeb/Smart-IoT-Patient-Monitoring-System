@@ -526,6 +526,7 @@ export const updateProviders = async (
 export const addProfessional = async (
   navigate: ReturnType<typeof useNavigate>,
   professional: {
+    institution_id: string;
     name: string;
     specialization: string;
     contact_number: string;
@@ -580,8 +581,6 @@ export const updatePatient = async (
     throw error;
   }
 };
-
-
 
 export const addPatient = async (
   navigate: ReturnType<typeof useNavigate>,
