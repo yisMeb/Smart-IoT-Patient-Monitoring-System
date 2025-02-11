@@ -11,6 +11,7 @@ import { sendResetPasswordEmail } from "./emailService";
 import { format } from "date-fns";
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
+<<<<<<< Updated upstream
 const Assigned_PATIENT = import.meta.env
   .VITE_API_GET_ASSIGNED_PATIENT as string;
 =======
