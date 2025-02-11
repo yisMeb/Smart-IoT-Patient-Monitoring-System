@@ -63,4 +63,100 @@ async def fetch_notifications_by_proffesional(id: str, db: asyncpg.Connection):
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
     except asyncpg.PostgresError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
-    
+
+async def fetch_resolved_alerts(id: str, db: asyncpg.Connection):
+    try:
+        alerts_query = '''
+            SELECT *
+            FROM public.alert
+            WHERE p_id = $1 AND is_resolved = True;
+        '''
+        alerts_data = await db.fetch(alerts_query, id)
+        
+        if not alerts_data:
+            return []
+        
+        return alerts_data
+
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+async def All_resolved_alerts(db: asyncpg.Connection):
+    try:
+        alerts_query = '''
+            SELECT *
+            FROM public.alert
+            WHERE is_resolved = True;
+        '''
+        alerts_data = await db.fetch(alerts_query)
+        
+        if not alerts_data:
+            return []
+        
+        return alerts_data
+
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+async def fetch_unresolved_alerts(id: str, db: asyncpg.Connection):
+    try:
+        alerts_query = '''
+            SELECT *
+            FROM public.alert
+            WHERE p_id = $1 AND is_resolved = False;
+        '''
+        alerts_data = await db.fetch(alerts_query, id)
+        
+        if not alerts_data:
+            return []
+        
+        return alerts_data
+
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+async def All_unresolved_alerts( db: asyncpg.Connection):
+    try:
+        alerts_query = '''
+            SELECT *
+            FROM public.alert
+            WHERE is_resolved = False;
+        '''
+        alerts_data = await db.fetch(alerts_query)
+        
+        if not alerts_data:
+            return []
+        
+        return alerts_data
+
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+
+
+async def all_proff_alert(id: str, db: asyncpg.Connection):
+    try:
+        query = '''
+            SELECT *
+            FROM public.alert
+            WHERE p_id = $1;
+        '''
+        data = await db.fetch(query, id)
+        
+        if not data:
+            return {"data": [], "count": 0}
+        
+        return  {"data": data, "count": len(data)}
+
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")

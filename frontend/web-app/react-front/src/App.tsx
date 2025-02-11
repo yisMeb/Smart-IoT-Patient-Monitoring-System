@@ -14,6 +14,8 @@ import Profile from "./pages/protected/Profile";
 import ProfileProfessionals from "./pages/protected/professionals/Profile";
 import ProfessionalDashboard from "./pages/protected/professionals/ProfessionalDashboard";
 import Alerts from "./pages/protected/professionals/Alerts";
+import PatientsDashbaord from "./pages/protected/patients/PatientsDashboard";
+import ProfilePatient from "./pages/protected/patients/Profile";
 
 function App() {
   return (
@@ -98,6 +100,23 @@ function App() {
             element={
               <ProtectedRoute requiredRole="professional"> 
                 <ProfileProfessionals/>
+              </ProtectedRoute>
+            }
+          />
+          {/* Patients */}
+          <Route
+            path="/patients/dashboard"
+            element={
+              <ProtectedRoute requiredRole="professional"> {/* patient */}
+                <PatientsDashbaord/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patients/profile"
+            element={
+              <ProtectedRoute requiredRole="professional"> {/* patient */}
+                <ProfilePatient/>
               </ProtectedRoute>
             }
           />

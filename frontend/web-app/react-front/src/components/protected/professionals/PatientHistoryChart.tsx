@@ -1,41 +1,64 @@
-import { Activity, ChevronUp } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { useEffect, useState } from "react";
+import { Activity, ChevronUp } from "lucide-react";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
+import { fetchPatientAssignmentHistory } from "../../../service/api";
+import { useNavigate } from "react-router-dom";
 
-const chartData = [
-  { month: "January", patient: 186 },
-  { month: "February", patient: 305 },
-  { month: "March", patient: 237 },
-  { month: "April", patient: 73 },
-  { month: "May", patient: 209 },
-  { month: "June", patient: 214 },
-]
+interface PatientData {
+  created_at: string;
+}
 
-const chartConfig = {
+const chartConfig: ChartConfig = {
   patient: {
-    label: "patient",
+    label: "Patient",
     color: "hsl(var(--chart-1))",
     icon: Activity,
   },
-} satisfies ChartConfig
+};
 
 export function PatientHistoryChart() {
+  const navigate = useNavigate();
+  const [chartData, setChartData] = useState<{ month: string; patient: number }[]>([]);
+
+  useEffect(() => {
+    async function loadPatientData() {
+      try {
+        const data: PatientData[] = await fetchPatientAssignmentHistory(navigate);
+        if (data) {
+          const monthlyCounts: Record<string, number> = {};
+
+          data.forEach((patient) => {
+            const month = new Date(patient.created_at).toLocaleString("default", { month: "long" });
+            monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+          });
+
+          const formattedData = Object.entries(monthlyCounts).map(([month, patient]) => ({ month, patient }));
+          setChartData(formattedData);
+        }
+      } catch (error) {
+        console.error("Error fetching patient data:", error);
+      }
+    }
+    loadPatientData();
+  }, [navigate]);
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center w-fit rounded-md p-1 bg-[#e8fff3]">
-            <ChevronUp color="green" size={12}/> <span className="text-green-500 font-semibold">2.2%</span>
+          <ChevronUp color="green" size={12} /> <span className="text-green-500 font-semibold">2.2%</span>
         </div>
         <CardTitle>Patient History</CardTitle>
       </CardHeader>
@@ -57,10 +80,7 @@ export function PatientHistoryChart() {
               tickMargin={8}
               tickFormatter={(value) => value.slice(0, 3)}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Area
               dataKey="patient"
               type="step"
@@ -73,5 +93,5 @@ export function PatientHistoryChart() {
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { fetchAllDevices, fetchAllPatient, fetchAllProfessionals } from '@/service/api';
+import { AllResolvedAlert, AllUnResolvedAlert, fetchAllDevices, fetchAllPatient, fetchAllProfessionals } from '@/service/api';
 import { useNavigate } from 'react-router-dom';
 
 interface MetricCardProps {
@@ -89,13 +89,23 @@ export const MetricCards = () => {
   
         const device_previousCount = 1;
         const device_change = ((deviceCount - device_previousCount) / device_previousCount) * 100;
-  
+        
+        const resolvedAlerts = (await AllResolvedAlert(navigate)) || [];
+        const resolvedAlerts_count = Array.isArray(resolvedAlerts) ? resolvedAlerts.length : 0;
+        
+        const unresolvedAlerts = (await AllUnResolvedAlert(navigate)) || [];
+        const unresolvedAlerts_count = Array.isArray(unresolvedAlerts) ? unresolvedAlerts.length : 0;
+
+        const resolvedAlert_change = resolvedAlerts_count > 0 ? ((resolvedAlerts_count - 1) / 1) * 100 : 0;
+        const unresolvedAlert_change = unresolvedAlerts_count > 0 ? ((unresolvedAlerts_count - 1) / 1) * 100 : 0;
+
+
         setMetrics([
           { value: patientCount.toString(), label: 'Patients', change: parseFloat(patient_change.toFixed(1)) },
           { value: professionalCount.toString(), label: 'Professionals', change: parseFloat(professional_change.toFixed(1)) },
           { value: deviceCount.toString(), label: 'Devices', change: parseFloat(device_change.toFixed(1)) },
-          { value: '72.4%', label: 'Alert Resolved', change: -0.647 },
-          { value: '72.4%', label: 'New device', change: -0.647 },
+          { value: resolvedAlerts_count.toString(), label: 'Resolved Alert', change: parseFloat(resolvedAlert_change.toFixed(1)) },
+          { value: unresolvedAlerts_count.toString(), label: 'UnResolved Alert', change: parseFloat(unresolvedAlert_change.toFixed(1)) },
         ]);
       } catch (error) {
         console.error('Failed to load metrics:', error);
