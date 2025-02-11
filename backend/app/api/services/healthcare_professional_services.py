@@ -142,3 +142,20 @@ async def update_healthcare_professional(
 
     return dict(updated_professional)
 
+async def contact_professionals(db: asyncpg.Connection, patient_id: str):
+    try:
+        row = await db.fetchrow(
+            'SELECT professional_id FROM public."patients" WHERE patient_id = $1', 
+            patient_id
+        )
+        if not row:
+            return []
+        
+        professional_id = row["professional_id"]
+        pro = await db.fetch(
+            'SELECT contact_number, email FROM public."healthcare_professionals" WHERE professional_id = $1', 
+            professional_id
+        )
+        return pro
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

@@ -91,7 +91,7 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
     
 async def read_patient_service(patient_id: str, db: asyncpg.Connection):
     query = """
-    SELECT patient_id, institution_id, name, dob, contact_number, email, address, created_at
+    SELECT *
     FROM patients
     WHERE patient_id = $1
     """
@@ -234,4 +234,34 @@ async def patients_for_professional(professional_id: str, db: asyncpg.Connection
     
     return patient_data
 
-    
+async def get_patient_Threshold(id: str, db: asyncpg.Connection):
+    query = """
+        SELECT 
+            heartrate_threshold_lower,
+            heartrate_threshold,
+            oxygen_threshold_lower,
+            oxygen_threshold,
+            temperature_threshold_lower,
+            temperature_threshold
+        FROM public.patients
+        WHERE patient_id = $1
+    """
+
+    result = await db.fetchrow(query, id)
+
+    if result is None:
+        raise ValueError(f"Patient with ID {id} not found")
+
+    # Extract threshold values
+    heartrate_lower, heartrate_upper = result['heartrate_threshold_lower'], result['heartrate_threshold']
+    oxygen_lower, oxygen_upper = result['oxygen_threshold_lower'], result['oxygen_threshold']
+    temperature_lower, temperature_upper = result['temperature_threshold_lower'], result['temperature_threshold']
+
+    # Format thresholds
+    thresholds = {
+        "Hearthrate": f"{heartrate_lower}-{heartrate_upper}",
+        "Oxygene": f"{oxygen_lower}-{oxygen_upper}",
+        "Temperature": f"{temperature_lower}-{temperature_upper}"
+    }
+
+    return thresholds

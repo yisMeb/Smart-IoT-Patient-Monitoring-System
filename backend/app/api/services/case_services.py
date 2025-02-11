@@ -34,7 +34,8 @@ async def get_case_history(id: str , db: asyncpg.Connection):
         query ='''
             SELECT *
             FROM public."case"
-            WHERE patient_id = $1;
+            WHERE patient_id = $1
+            Order by timestamp desc;
         '''
         device_data = await db.fetch(
             query,

@@ -107,7 +107,7 @@ function App() {
           <Route
             path="/patients/dashboard"
             element={
-              <ProtectedRoute requiredRole="professional"> {/* patient */}
+              <ProtectedRoute requiredRole="patient"> 
                 <PatientsDashbaord/>
               </ProtectedRoute>
             }
@@ -115,7 +115,7 @@ function App() {
           <Route
             path="/patients/profile"
             element={
-              <ProtectedRoute requiredRole="professional"> {/* patient */}
+              <ProtectedRoute requiredRole="patient">  
                 <ProfilePatient/>
               </ProtectedRoute>
             }

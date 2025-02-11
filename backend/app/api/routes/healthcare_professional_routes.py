@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.api.services.healthcare_professional_services import (
     add_healthcare_professional,
     assigned_patients,
+    contact_professionals,
     delete_healthcare_professionals,
     get_healthcare_professional_by_ID,
     get_healthcare_professionals,
@@ -77,5 +78,12 @@ async def update_professional(professional_id: str, updates: UpdateHealthcarePro
 async def get_professional_patients(professional_id: str, db: asyncpg.Connection = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
     if current_user["user_role"] == "professional":
         return await assigned_patients(db, professional_id)
+    else:
+        raise HTTPException(status_code=401, detail="Only professionals can perform this task!")
+
+@router.get("/professional_Conatact_patients/{patient_id}")
+async def get_patients_professional(patient_id: str, db: asyncpg.Connection = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
+    if current_user["user_role"] == "patient":
+        return await contact_professionals(db, patient_id)
     else:
         raise HTTPException(status_code=401, detail="Only professionals can perform this task!")

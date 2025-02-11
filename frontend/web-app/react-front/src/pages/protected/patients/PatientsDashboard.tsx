@@ -27,12 +27,12 @@ const PatientsDashboard = () => {
 
       {/* Main Content */}
       <div className="-mt-24 max-w-screen-xl mx-auto">
-        <div className="flex flex-wrap justify-center">
+        <div className="flex flex-wrap justify-center gap-5">
           <div className="basis-2/3 md:basis-2/3 xl:basis-1/2 lg:mx-4">
               <InfoCards/>
-            <span className='mt-3'>
+            <div className='mt-5'>
                 <Notifications />
-            </span>
+            </div>
           </div>
 
           <div className="basis-1/3 md:basis-1/3 xl:basis-1/3">

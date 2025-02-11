@@ -23,10 +23,9 @@ async def addcase(data: CaseData,db = Depends(get_db_conn), current_user: dict =
 
 @router.get("/remark/patient/{id}")
 async def getcase(id: str ,db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
-    # Get id from token and pass that
-    if current_user["user_role"] == "professional":
+    if current_user["user_role"] == "professional" or current_user["user_role"] == "patient":
         return await get_case_history(id, db)
     else:
-        raise HTTPException(status_code=401, detail="Only professional can access this feature.")
+        raise HTTPException(status_code=401, detail="Only professional or patient can access this feature.")
 
 
