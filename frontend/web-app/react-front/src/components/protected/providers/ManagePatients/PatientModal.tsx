@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface PatientModalProps {
   isEdit: boolean;
@@ -28,6 +28,67 @@ const PatientModal: React.FC<PatientModalProps> = ({
   onSubmit,
   onChange,
 }) => {
+  const [errors, setErrors] = useState({
+    name: "",
+    dob: "",
+    address: "",
+    contact_number: "",
+    email: "",
+    professional_id: "",
+    device_id: "",
+  });
+
+  const validateForm = () => {
+    const newErrors = {
+      name: "",
+      dob: "",
+      address: "",
+      contact_number: "",
+      email: "",
+      professional_id: "",
+      device_id: "",
+    };
+    let isValid = true;
+
+    if (!patient.name.trim()) {
+      newErrors.name = "Name is required";
+      isValid = false;
+    }
+    if (!patient.dob.trim()) {
+      newErrors.dob = "Date of Birth is required";
+      isValid = false;
+    }
+    if (!patient.address.trim()) {
+      newErrors.address = "Address is required";
+      isValid = false;
+    }
+    if (!patient.contact_number.trim()) {
+      newErrors.contact_number = "Contact number is required";
+      isValid = false;
+    }
+    if (!patient.email.trim()) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    }
+    if (!patient.professional_id.trim()) {
+      newErrors.professional_id = "Doctor assignment is required";
+      isValid = false;
+    }
+    if (!patient.device_id.trim()) {
+      newErrors.device_id = "Device assignment is required";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      onSubmit();
+    }
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -47,6 +108,9 @@ const PatientModal: React.FC<PatientModalProps> = ({
               onChange={(e) => onChange("name", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
           {/* Date of Birth */}
@@ -56,11 +120,13 @@ const PatientModal: React.FC<PatientModalProps> = ({
             </label>
             <input
               type="date"
-              placeholder="Enter the date"
               value={patient.dob}
               onChange={(e) => onChange("dob", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.dob && (
+              <p className="text-red-500 text-xs mt-1">{errors.dob}</p>
+            )}
           </div>
 
           {/* Address */}
@@ -75,6 +141,9 @@ const PatientModal: React.FC<PatientModalProps> = ({
               onChange={(e) => onChange("address", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.address && (
+              <p className="text-red-500 text-xs mt-1">{errors.address}</p>
+            )}
           </div>
 
           {/* Contact Number */}
@@ -89,6 +158,11 @@ const PatientModal: React.FC<PatientModalProps> = ({
               onChange={(e) => onChange("contact_number", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.contact_number && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.contact_number}
+              </p>
+            )}
           </div>
 
           {/* Email */}
@@ -103,6 +177,9 @@ const PatientModal: React.FC<PatientModalProps> = ({
               onChange={(e) => onChange("email", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
           {/* Professional Dropdown */}
@@ -125,6 +202,11 @@ const PatientModal: React.FC<PatientModalProps> = ({
                 </option>
               ))}
             </select>
+            {errors.professional_id && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.professional_id}
+              </p>
+            )}
           </div>
 
           {/* Device Dropdown */}
@@ -149,6 +231,9 @@ const PatientModal: React.FC<PatientModalProps> = ({
                   </option>
                 ))}
             </select>
+            {errors.device_id && (
+              <p className="text-red-500 text-xs mt-1">{errors.device_id}</p>
+            )}
           </div>
         </div>
 
@@ -161,7 +246,7 @@ const PatientModal: React.FC<PatientModalProps> = ({
           </button>
           <button
             className="px-20 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            onClick={onSubmit}
+            onClick={handleSubmit}
           >
             {isEdit ? "Save" : "Add"}
           </button>
