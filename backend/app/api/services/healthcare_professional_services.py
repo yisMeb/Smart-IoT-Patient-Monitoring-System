@@ -19,7 +19,7 @@ async def add_healthcare_professional(professional: CreateHealthcareProfessional
 
         if not institution_exists:
             raise HTTPException(
-                status_code=400, 
+                status_code=404, 
                 detail=f"Institution with ID {professional.institution_id} does not exist."
             )
 

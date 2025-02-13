@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface DeviceModalProps {
   isEdit: boolean;
@@ -15,6 +15,27 @@ const DeviceModal: React.FC<DeviceModalProps> = ({
   onSubmit,
   onChange,
 }) => {
+  const [errors, setErrors] = useState({ device_name: "" });
+
+  const validateForm = () => {
+    const newErrors = { device_name: "" };
+    let isValid = true;
+
+    if (!device.device_name.trim()) {
+      newErrors.device_name = "Device Name is required";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      onSubmit();
+    }
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -22,6 +43,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({
           {isEdit ? "Edit Device" : "Add New Device"}
         </h2>
         <div className="space-y-4">
+          {/* Device Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Device Name
@@ -33,7 +55,12 @@ const DeviceModal: React.FC<DeviceModalProps> = ({
               onChange={(e) => onChange("device_name", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.device_name && (
+              <p className="text-red-500 text-xs mt-1">{errors.device_name}</p>
+            )}
           </div>
+
+          {/* Is Assigned (Only for Edit Mode) */}
           {isEdit && (
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -56,6 +83,8 @@ const DeviceModal: React.FC<DeviceModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* Buttons */}
         <div className="mt-6 flex justify-center space-x-4 w-full">
           <button
             className="px-20 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
@@ -65,7 +94,7 @@ const DeviceModal: React.FC<DeviceModalProps> = ({
           </button>
           <button
             className="px-20 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            onClick={onSubmit}
+            onClick={handleSubmit}
           >
             {isEdit ? "Save" : "Add"}
           </button>

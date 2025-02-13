@@ -42,5 +42,7 @@ async def read_all(db: asyncpg.Connection):
     SELECT *
     FROM public."device"
     """
-    patients = await db.fetch(query)
-    return patients
+    device = await db.fetch(query)
+    if not device:
+        return []
+    return device

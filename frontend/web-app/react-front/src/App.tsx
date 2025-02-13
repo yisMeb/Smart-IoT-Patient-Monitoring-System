@@ -16,6 +16,7 @@ import ProfessionalDashboard from "./pages/protected/professionals/ProfessionalD
 import Alerts from "./pages/protected/professionals/Alerts";
 import PatientsDashbaord from "./pages/protected/patients/PatientsDashboard";
 import ProfilePatient from "./pages/protected/patients/Profile";
+import ForgotPassword from "./pages/public/ForgotPassword";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="*" element={<NoPage />} />
 
           {/* Protected routes */}

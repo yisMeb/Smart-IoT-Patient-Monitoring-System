@@ -10,7 +10,7 @@ router = APIRouter()
 @router.delete("/delete/{institution_id}")
 async def delete_institution(institution_id: str, db: asyncpg.Connection = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
     if current_user["user_role"] != "institution":
-        raise HTTPException(status_code=401, detail="Only adminstitution can access this feature")
+        raise HTTPException(status_code=401, detail="Only institution can access this feature")
     result = await delete_institution_service(institution_id, db)
     if result is None:
         raise HTTPException(status_code=404, detail="Institution not found")

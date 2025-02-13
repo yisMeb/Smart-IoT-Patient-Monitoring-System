@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { sendEmailVerification, signInWithCustomToken } from "firebase/auth";
+import { sendEmailVerification, signInWithCustomToken, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebaseConfig";
 import {
   getIdTokenFromCookies,
@@ -10,6 +10,7 @@ import {
   setIdTokenCookie,
 } from "../../lib/cookieUtils";
 import { useUserRole } from "../../context/UserRoleContext";
+import { FirebaseError } from "firebase/app";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -97,6 +98,30 @@ export default function Login() {
       return;
     }
     try {
+
+        try{
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const idToken = await userCredential.user.getIdToken();
+            if (!idToken) {
+              console.error('Failed to retrieve ID token');
+              return;
+            }
+        }catch (error) {
+          if (error instanceof FirebaseError) {
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+              setErrorMessage("Incorrect email or password.");
+            } else if (error.code === 'auth/invalid-email') {
+              setErrorMessage("Invalid email address.");
+            } else if(error.code === 'auth/invalid-credential'){
+              setErrorMessage("Invalid credential");
+            }else {
+              setErrorMessage("An authentication error occurred. Please try again.");
+            }
+          } else {
+            console.error('Unexpected error:', error);
+          }
+          return;
+        }
       const response = await fetch(import.meta.env.VITE_API_LOGIN, {
         method: "POST",
         headers: {
@@ -104,6 +129,7 @@ export default function Login() {
         },
         body: JSON.stringify({ email, password }),
       });
+
       if (!response.ok) {
         setIsLoading(false);
         if (response.status === 401) {

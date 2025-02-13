@@ -15,7 +15,7 @@ import asyncpg
 
 router = APIRouter()
 
-# POST route to add a healthcare professional (Admin only)
+# POST route to add a healthcare professional (institution only)
 @router.post("/add")
 async def add_professional(
     professional: CreateHealthcareProfessional,
@@ -25,7 +25,7 @@ async def add_professional(
     if current_user["user_role"] == "institution":
         return await add_healthcare_professional(professional, db)
     else :
-        raise HTTPException(status_code=401, detail="Only admin can access this feature")
+        raise HTTPException(status_code=401, detail="Only institution can access this feature")
 
 
 # GET route to fetch all healthcare professionals
@@ -37,7 +37,7 @@ async def fetch_professionals(
     if current_user["user_role"] == "institution":
         return await get_healthcare_professionals(db)
     else :
-        raise HTTPException(status_code=401, detail="Only admin can access this feature")
+        raise HTTPException(status_code=401, detail="Only institution can access this feature")
 
 @router.get("/fetch/{professional_id}")
 async def fetch_professionals(professional_id:str ,current_user: dict = Depends(get_current_user), db: asyncpg.Connection = Depends(get_db_conn),
@@ -45,7 +45,7 @@ async def fetch_professionals(professional_id:str ,current_user: dict = Depends(
     if current_user["user_role"] == "institution" or current_user["user_role"] == "professional":
         return await get_healthcare_professional_by_ID(db, professional_id)
     else :
-        raise HTTPException(status_code=401, detail="Only admin can access this feature")
+        raise HTTPException(status_code=401, detail="Only institution can access this feature")
 
     
 @router.delete("/delete")
@@ -72,7 +72,7 @@ async def update_professional(professional_id: str, updates: UpdateHealthcarePro
     if current_user["user_role"] == "institution" or current_user["user_role"] == "professional":
         return await update_healthcare_professional(db, professional_id, updates)
     else:
-        raise HTTPException(status_code=401, detail="Only institution users can edit.")
+        raise HTTPException(status_code=401, detail="Only institution or professional can edit.")
 
 @router.get("/patients/{professional_id}")
 async def get_professional_patients(professional_id: str, db: asyncpg.Connection = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):

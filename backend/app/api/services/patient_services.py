@@ -65,7 +65,7 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
             patient.professional_id
             )
         if not record:
-            raise HTTPException(status_code=500, detail="Failed to insert patient data")
+            raise HTTPException(status_code=404, detail="Failed to insert patient data")
         
        #send email to patient
         firebase_user = await create_firebase_user(patient.email)

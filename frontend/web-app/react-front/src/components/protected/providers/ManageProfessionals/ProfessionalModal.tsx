@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface ProfessionalModalProps {
   isEdit: boolean;
@@ -20,6 +20,49 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
   onSubmit,
   onChange,
 }) => {
+  const [errors, setErrors] = useState({
+    name: "",
+    specialization: "",
+    contact_number: "",
+    email: "",
+  });
+
+  const validateForm = () => {
+    const newErrors = {
+      name: "",
+      specialization: "",
+      contact_number: "",
+      email: "",
+    };
+    let isValid = true;
+
+    if (!professional.name.trim()) {
+      newErrors.name = "Name is required";
+      isValid = false;
+    }
+    if (!professional.specialization.trim()) {
+      newErrors.specialization = "Specialization is required";
+      isValid = false;
+    }
+    if (!professional.contact_number.trim()) {
+      newErrors.contact_number = "Contact number is required";
+      isValid = false;
+    }
+    if (!professional.email.trim()) {
+      newErrors.email = "Email is required";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      onSubmit();
+    }
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -39,6 +82,9 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
               onChange={(e) => onChange("name", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
           {/* Specialization */}
@@ -53,6 +99,11 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
               onChange={(e) => onChange("specialization", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.specialization && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.specialization}
+              </p>
+            )}
           </div>
 
           {/* Contact Number */}
@@ -67,6 +118,11 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
               onChange={(e) => onChange("contact_number", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.contact_number && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.contact_number}
+              </p>
+            )}
           </div>
 
           {/* Email */}
@@ -81,6 +137,9 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
               onChange={(e) => onChange("email", e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
         </div>
 
@@ -93,7 +152,7 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
           </button>
           <button
             className="px-20 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            onClick={onSubmit}
+            onClick={handleSubmit}
           >
             {isEdit ? "Save" : "Add"}
           </button>

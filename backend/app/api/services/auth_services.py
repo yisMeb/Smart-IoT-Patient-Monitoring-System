@@ -172,12 +172,10 @@ async def save_Institution_to_db(db: asyncpg.Connection, user_data: dict):
         raise HTTPException(status_code=500, detail=f"Institute creation error: {str(e)}")
     
 async def fetch_user_by_email(email: str, db: asyncpg.Connection):
-    logger = logging.getLogger(__name__)
     try:
         user = await db.fetchrow('''
             SELECT * FROM public."users" WHERE email = $1
         ''', email)
-        logger.error(f"Email is : {email}")
         if user is None:
             raise HTTPException(status_code=404, detail="User not found.")
 
