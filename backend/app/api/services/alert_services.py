@@ -10,13 +10,10 @@ async def fetch_notifications_by_id(id: str , db: asyncpg.Connection):
             WHERE patient_id = $1
             ORDER BY "timestamp" DESC;
         '''
-        device_data = await db.fetch(
-            query,
-            id
-        )
-        if not device_data:
-            raise HTTPException(status_code=500, detail="Failed to get device data")
-        return device_data
+        alert_data = await db.fetch(query, id)
+        if not alert_data:
+           return []
+        return alert_data
     
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
@@ -45,8 +42,7 @@ async def fetch_notifications_by_proffesional(id: str, db: asyncpg.Connection):
             patient_data = await db.fetchrow(patient_query, alert['patient_id'])
             
             if not patient_data:
-                raise HTTPException(status_code=404, detail=f"Patient details not found for patient_id: {alert['patient_id']}")
-
+               return []
             final_alert_data = {
                 "id": alert['id'],
                 "message": alert['message'],

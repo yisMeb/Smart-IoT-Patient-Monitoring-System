@@ -11,7 +11,7 @@ async def create_device(device: AddDevice, db = Depends(get_db_conn), current_us
     if current_user["user_role"] == "institution":
         return await add_devices(device, db)
     else:
-        raise HTTPException(status_code=401, detail="Only admin can access this feature")
+        raise HTTPException(status_code=401, detail="Only institution can access this feature")
 
 @router.put("/edit/{device_id}", response_model=dict)
 async def device_update(device_id: str, device: UpdateDevice, db = Depends(get_db_conn)):
@@ -27,4 +27,4 @@ async def get_all(db = Depends(get_db_conn), current_user: dict = Depends(get_cu
         data = await read_all(db)
         return data
     else:
-        raise HTTPException(status_code=401, detail="Only admin can access this feature")
+        raise HTTPException(status_code=401, detail="Only institution & professionals can access this feature")

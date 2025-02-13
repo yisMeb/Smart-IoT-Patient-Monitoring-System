@@ -42,7 +42,7 @@ async def get_case_history(id: str , db: asyncpg.Connection):
             id
         )
         if not device_data:
-            raise HTTPException(status_code=500, detail="Failed to get case data")
+            return []
         return device_data
     
     except ValidationError as e:
