@@ -11,6 +11,10 @@ import {
 } from "../../lib/cookieUtils";
 import { useUserRole } from "../../context/UserRoleContext";
 import { FirebaseError } from "firebase/app";
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import Terms from "./terms"
+
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -227,15 +231,9 @@ export default function Login() {
 
         <div className="mt-auto">
           <div className="flex space-x-6 text-sm text-white/60">
-            <a href="/terms" className="hover:text-white">
-              Terms
-            </a>
-            <a href="/policy" className="hover:text-white">
-              Policies
-            </a>
-            <a href="/contact" className="hover:text-white">
-              Contact Us
-            </a>
+            <p style={{ fontSize: '0.8rem', textAlign: 'center' }}>
+              &copy; {new Date().getFullYear()} Tena Guard. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
@@ -314,9 +312,14 @@ export default function Login() {
                   />
                   <span className="text-gray-600">
                     I Accept the{" "}
-                    <a href="/terms" className="text-[#0066FF]">
-                      Terms
-                    </a>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="border-none text-[#0066FF] hover:bg-none" >Terms</Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[800px] p-0">
+                        <Terms />
+                      </PopoverContent>
+                    </Popover>
                   </span>
                 </label>
                 <a href="/forgot-password" className="text-[#0066FF]">

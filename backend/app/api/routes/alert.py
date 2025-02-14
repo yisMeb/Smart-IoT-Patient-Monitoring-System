@@ -38,7 +38,7 @@ async def resolved_alerts(db = Depends(get_db_conn), current_user: dict = Depend
 @router.get("/unresolved/professional/{id}")
 async def unresolved_alerts(id: str, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
     if current_user["user_role"] == "professional":
-        return await fetch_unresolved_alerts(id, db, resolved=False)
+        return await fetch_unresolved_alerts(id, db)
     else:
         raise HTTPException(status_code=401, detail="Only professionals users can access this feature.")
 

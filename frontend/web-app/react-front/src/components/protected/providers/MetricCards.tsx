@@ -81,20 +81,20 @@ export const MetricCards = () => {
         const devices = (await fetchAllDevices(navigate)) || [];
         const deviceCount = Array.isArray(devices) ? devices.length : 0;
   
-        const patient_previousCount = 1;
+        const patient_previousCount = 10;
         const patient_change = ((patientCount - patient_previousCount) / patient_previousCount) * 100;
   
-        const professional_previousCount = 1;
+        const professional_previousCount = 10;
         const professional_change = ((professionalCount - professional_previousCount) / professional_previousCount) * 100;
   
-        const device_previousCount = 1;
+        const device_previousCount = 10;
         const device_change = ((deviceCount - device_previousCount) / device_previousCount) * 100;
         
         const resolvedAlerts = (await AllResolvedAlert(navigate)) || [];
-        const resolvedAlerts_count = Array.isArray(resolvedAlerts) ? resolvedAlerts.length : 0;
+        const resolvedAlerts_count = Array.isArray(resolvedAlerts) ? resolvedAlerts.length : 10;
         
         const unresolvedAlerts = (await AllUnResolvedAlert(navigate)) || [];
-        const unresolvedAlerts_count = Array.isArray(unresolvedAlerts) ? unresolvedAlerts.length : 0;
+        const unresolvedAlerts_count = Array.isArray(unresolvedAlerts) ? unresolvedAlerts.length : 10;
 
         const resolvedAlert_change = resolvedAlerts_count > 0 ? ((resolvedAlerts_count - 1) / 1) * 100 : 0;
         const unresolvedAlert_change = unresolvedAlerts_count > 0 ? ((unresolvedAlerts_count - 1) / 1) * 100 : 0;

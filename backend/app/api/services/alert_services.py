@@ -25,7 +25,8 @@ async def fetch_notifications_by_proffesional(id: str, db: asyncpg.Connection):
         alerts_query = '''
             SELECT *
             FROM public.alert
-            WHERE p_id = $1;
+            WHERE p_id = $1
+            ORDER BY "timestamp" DESC;
         '''
         alerts_data = await db.fetch(alerts_query, id)
         
@@ -64,7 +65,8 @@ async def fetch_resolved_alerts(id: str, db: asyncpg.Connection):
         alerts_query = '''
             SELECT *
             FROM public.alert
-            WHERE p_id = $1 AND is_resolved = True;
+            WHERE p_id = $1 AND is_resolved = True
+            ORDER BY "timestamp" DESC;
         '''
         alerts_data = await db.fetch(alerts_query, id)
         
@@ -83,7 +85,8 @@ async def All_resolved_alerts(db: asyncpg.Connection):
         alerts_query = '''
             SELECT *
             FROM public.alert
-            WHERE is_resolved = True;
+            WHERE is_resolved = True
+            ORDER BY "timestamp" DESC;
         '''
         alerts_data = await db.fetch(alerts_query)
         
@@ -102,7 +105,8 @@ async def fetch_unresolved_alerts(id: str, db: asyncpg.Connection):
         alerts_query = '''
             SELECT *
             FROM public.alert
-            WHERE p_id = $1 AND is_resolved = False;
+            WHERE p_id = $1 AND is_resolved = False
+            ORDER BY "timestamp" DESC;
         '''
         alerts_data = await db.fetch(alerts_query, id)
         

@@ -55,7 +55,7 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
             patient.address, 
             current_date,
             patient.device_id, 
-            patient.status, 
+            patient.status.lower(), 
             patient.oxygen_threshold, 
             patient.heartrate_threshold,  
             patient.temperature_threshold,

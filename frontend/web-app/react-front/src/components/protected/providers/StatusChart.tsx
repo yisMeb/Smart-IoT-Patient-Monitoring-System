@@ -75,7 +75,7 @@ export const StatusCharts = () => {
         if (!Array.isArray(devices)) {
           throw new Error("Invalid data format: devices is not an array");
         }
-  
+        
         const patientStatusBreakdown = patients.reduce(
           (acc: Record<string, number>, patient: { status: string }) => {
             if (patient.status === "active") acc.active += 1;

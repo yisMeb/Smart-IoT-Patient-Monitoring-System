@@ -31,28 +31,68 @@ const chartConfig: ChartConfig = {
 export function PatientHistoryChart() {
   const navigate = useNavigate();
   const [chartData, setChartData] = useState<{ month: string; patient: number }[]>([]);
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState<string | null>(null); 
 
   useEffect(() => {
+    const abortController = new AbortController(); // For cleanup
+
     async function loadPatientData() {
+      setLoading(true);
+      setError(null);
+
       try {
         const data: PatientData[] = await fetchPatientAssignmentHistory(navigate);
-        if (data) {
-          const monthlyCounts: Record<string, number> = {};
 
-          data.forEach((patient) => {
-            const month = new Date(patient.created_at).toLocaleString("default", { month: "long" });
-            monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
-          });
-
-          const formattedData = Object.entries(monthlyCounts).map(([month, patient]) => ({ month, patient }));
-          setChartData(formattedData);
+        if (abortController.signal.aborted) {
+          return;
         }
+
+        if (!data || !Array.isArray(data)) {
+          setError("Failed to retrieve data.");
+          return;
+        }
+
+        const monthlyCounts: Record<string, number> = {};
+        data.forEach((patient) => {
+          if (abortController.signal.aborted) {
+            return;
+          }
+          const month = new Date(patient.created_at).toLocaleString("default", { month: "long" });
+          monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+        });
+
+        const formattedData = Object.entries(monthlyCounts).map(([month, patient]) => ({ month, patient }));
+        setChartData(formattedData);
+
       } catch (error) {
+        if (abortController.signal.aborted) {
+          return; 
+        }
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return; 
+        }
+        setError("Error fetching patient data");
         console.error("Error fetching patient data:", error);
+      } finally {
+        setLoading(false);
       }
     }
+
     loadPatientData();
+
+    return () => {
+      abortController.abort();
+    };
   }, [navigate]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <Card>

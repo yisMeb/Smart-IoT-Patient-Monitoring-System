@@ -19,7 +19,7 @@ const ProfessionalDashboard = () => {
 
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+              <h1 className="text-2xl font-bold text-white">Professionals Dashboard</h1>
               
             </div>
           </div>
@@ -37,7 +37,7 @@ const ProfessionalDashboard = () => {
             </div>
             <div className="col-span-1 lg:col-span-1 flex flex-col h-full">
               <div className="flex-grow">
-                <PatientHistoryChart/>
+                <PatientHistoryChart/> 
               </div>
             </div>
           </div>
