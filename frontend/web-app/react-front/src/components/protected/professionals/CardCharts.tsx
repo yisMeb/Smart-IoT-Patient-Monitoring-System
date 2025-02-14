@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Area, AreaChart } from "recharts";
+import { 
+  Area, AreaChart, XAxis,
+} from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { fetchAllAlertProfess, fetchResolvedAlertProfessional, fetchUnesolvedAlertProfessional } from "../../../service/api";
@@ -10,7 +12,7 @@ interface Alert {
 }
 
 interface ChartData {
-  week: string;
+  date: string;
   resolved: number;
   unresolved: number;
   total_alert: number;
@@ -27,7 +29,7 @@ export function CardChart() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [resolvedData, unresolvedData, totalData] = await Promise.all([
+        const responses = await Promise.all([
           fetchResolvedAlertProfessional(navigate) as Promise<Alert[]>,
           fetchUnesolvedAlertProfessional(navigate) as Promise<Alert[]>,
           fetchAllAlertProfess(navigate) as Promise<{ data: Alert[] }>,
@@ -35,26 +37,50 @@ export function CardChart() {
 
         const processData = (data: Alert[]): Record<string, number> => {
           return data.reduce((acc: Record<string, number>, curr: Alert) => {
-            const week = new Date(curr.timestamp).toLocaleDateString("en-US", { weekday: "short" });
-            acc[week] = (acc[week] || 0) + 1;
+            const dateStr = new Date(curr.timestamp).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            });
+            acc[dateStr] = (acc[dateStr] || 0) + 1;
             return acc;
           }, {});
         };
 
-        const resolvedCounts = processData(resolvedData);
-        const unresolvedCounts = processData(unresolvedData);
-        const totalCounts = processData(totalData.data);
+        const sortData = (counts: Record<string, number>) => {
+          return Object.keys(counts).sort(
+            (a, b) => new Date(a).getTime() - new Date(b).getTime()
+          ).map((date) => ({ date, count: counts[date] }));
+        };
 
-        const weeks = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const resolvedCounts = processData(responses[0]);
+        const unresolvedCounts = processData(responses[1]);
+        const totalCounts = processData(responses[2].data);
 
-        const formattedData: ChartData[] = weeks.map((week) => ({
-          week,
-          resolved: resolvedCounts[week] || 0,
-          unresolved: unresolvedCounts[week] || 0,
-          total_alert: totalCounts[week] || 0,
+        const sortedResolvedCounts = sortData(resolvedCounts);
+        const sortedUnresolvedCounts = sortData(unresolvedCounts);
+        const sortedTotalCounts = sortData(totalCounts);
+
+        const resolvedChartData = sortedResolvedCounts.map((item) => ({
+          date: item.date,
+          resolved: item.count,
+        }));
+        const unresolvedChartData = sortedUnresolvedCounts.map((item) => ({
+          date: item.date,
+          unresolved: item.count,
+        }));
+        /* const totalChartData = sortedTotalCounts.map((item) => ({
+          date: item.date,
+          total_alert: item.count,
+        })); */
+        const combinedChartData = sortedTotalCounts.map((item, index) => ({
+          date: item.date,
+          resolved: resolvedChartData.length > index ? resolvedChartData[index].resolved : 0,
+          unresolved: unresolvedChartData.length > index ? unresolvedChartData[index].unresolved : 0,
+          total_alert: item.count,
         }));
 
-        setChartData({ resolved: formattedData, unresolved: formattedData, total_alert: formattedData });
+        setChartData({ resolved: combinedChartData, unresolved: combinedChartData, total_alert: combinedChartData });
       } catch (error) {
         console.error("Failed to fetch chart data:", error);
       }
@@ -95,7 +121,12 @@ export function CardChart() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <ChartContainer config={{ [config.dataKey]: { label: config.dataKey, color: config.color.stroke } }}>
+            <ChartContainer
+              config={{
+                [config.dataKey]: { label: config.dataKey, color: config.color.stroke },
+                xKey: { label: "Date", color: config.color.stroke },
+              }}
+            >
               <AreaChart
                 accessibilityLayer
                 data={config.data}
@@ -110,6 +141,7 @@ export function CardChart() {
                   stroke={config.color.stroke}
                   strokeWidth={2}
                 />
+                <XAxis dataKey="date" />
               </AreaChart>
             </ChartContainer>
           </CardContent>

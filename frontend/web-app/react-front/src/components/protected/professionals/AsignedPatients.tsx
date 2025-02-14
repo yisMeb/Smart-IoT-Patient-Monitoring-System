@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronRight, Loader2, RefreshCw, Search } from "lucide-react"
@@ -7,6 +9,8 @@ import { fetchAssingnedPatients } from "../../../service/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import Case from "../../../pages/protected/professionals/Case" 
 
 interface Patient {
   patient_id: string
@@ -14,7 +18,7 @@ interface Patient {
   dob: string
   contact_number: string
   email: string
-  sensors: "Assigned" | "Not Assigned"
+  device_id: string | null
 }
 
 export const AssignedPatients = () => {
@@ -25,6 +29,7 @@ export const AssignedPatients = () => {
   const [nameFilter, setNameFilter] = useState("")
   const [contactFilter, setContactFilter] = useState("")
   const [sensorFilter, setSensorFilter] = useState("all")
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const navigate = useNavigate()
 
   const fetchData = useCallback(async () => {
@@ -54,7 +59,9 @@ export const AssignedPatients = () => {
       (patient) =>
         patient.name.toLowerCase().includes(nameFilter.toLowerCase()) &&
         patient.contact_number.includes(contactFilter) &&
-        (sensorFilter === "all" || patient.sensors.toLowerCase().replace(" ", "-") === sensorFilter),
+        (sensorFilter === "all" ||
+          (sensorFilter === "assigned" && patient.device_id !== null) ||
+          (sensorFilter === "not-assigned" && patient.device_id === null)),
     )
     setFilteredPatients(filtered)
   }, [nameFilter, contactFilter, sensorFilter, patients])
@@ -65,42 +72,51 @@ export const AssignedPatients = () => {
 
   if (error) return <div>Error: {error}</div>
 
-  const CaseViewerButton= ()=> {
-    alert("Case Viewer Button Clicked")
-  }
+  const CaseViewerButton = (patient: Patient) => (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button onClick={() => setSelectedPatient(patient)} variant="outline" size="icon">
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+        {selectedPatient && <Case patient={selectedPatient} />}
+      </SheetContent>
+    </Sheet>
+  )
 
   return (
     <Card>
       <CardContent>
-        <div className="flex justify-between items-center mb-4 mt-2">
-          <div className="flex space-x-2">
-            <div className="relative">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 mt-2 gap-2">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Filter by name"
                 value={nameFilter}
                 onChange={(e) => setNameFilter(e.target.value)}
-                className="pl-8 w-[200px]"
+                className="pl-8 w-full sm:w-[200px]"
               />
             </div>
             <Input
               placeholder="Filter by contact"
               value={contactFilter}
               onChange={(e) => setContactFilter(e.target.value)}
-              className="w-[200px]"
+              className="w-full sm:w-[200px]"
             />
             <Select value={sensorFilter} onValueChange={setSensorFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filter by sensors" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="assigned">Assigned</SelectItem>
-                <SelectItem value="not-assigned">Not Assigned</SelectItem>
+                <SelectItem value="not-assigned">Not assigned</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleRefresh} disabled={loading} variant="outline" size="icon">
+          <Button onClick={handleRefresh} disabled={loading} variant="outline" size="icon" className="mt-2 sm:mt-0">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
@@ -109,51 +125,49 @@ export const AssignedPatients = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[150px]">Name</TableHead>
-                <TableHead>Date of Birth</TableHead>
-                <TableHead>Contact Number</TableHead>
-                <TableHead>Sensors</TableHead>
-                <TableHead className="text-right">Case</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPatients.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-gray-500">
-                    No patients match the current filters
-                  </TableCell>
+                  <TableHead className="w-[150px]">Name</TableHead>
+                  <TableHead>Date of Birth</TableHead>
+                  <TableHead>Contact Number</TableHead>
+                  <TableHead>Sensors</TableHead>
+                  <TableHead className="text-right">Case</TableHead>
                 </TableRow>
-              ) : (
-                filteredPatients.map((patient) => (
-                  <TableRow key={patient.patient_id}>
-                    <TableCell className="font-medium">
-                      {patient.name} <br />
-                      <span className="text-gray-400 font-normal">{patient.email}</span>
-                    </TableCell>
-                    <TableCell>{new Date(patient.dob).toLocaleDateString()}</TableCell>
-                    <TableCell>{patient.contact_number}</TableCell>
-                    <TableCell className="text-right">
-                      <div
-                        className={`font-bold w-fit p-1 rounded-md ${
-                          patient.sensors === "Assigned" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {patient.sensors}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <button onClick={CaseViewerButton} className="text-[#aeb2c1] border rounded-md bg-[#e5e6e9]">
-                        <ChevronRight size={18} />
-                      </button>
+              </TableHeader>
+              <TableBody>
+                {filteredPatients.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-gray-500">
+                      No patients match the current filters
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredPatients.map((patient) => (
+                    <TableRow key={patient.patient_id}>
+                      <TableCell className="font-medium">
+                        {patient.name} <br />
+                        <span className="text-gray-400 font-normal">{patient.email}</span>
+                      </TableCell>
+                      <TableCell>{new Date(patient.dob).toLocaleDateString()}</TableCell>
+                      <TableCell>{patient.contact_number}</TableCell>
+                      <TableCell>
+                        <div
+                          className={`font-bold w-fit p-1 rounded-md ${
+                            patient.device_id ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {patient.device_id ? "Assigned" : "Not assigned"}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">{CaseViewerButton(patient)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>

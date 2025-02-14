@@ -135,11 +135,11 @@ export const fetchAllPatient = async (
 export const AllResolvedAlert = async (navigate: ReturnType<typeof useNavigate>) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
-    const role = getRoleIDFromCookie();
+    //const role = getRoleIDFromCookie();
 
     if (!auth) return [];
 
-    const response = await fetch(`${ALL_RESOLVED_ALERT}/${role}`, {
+    const response = await fetch(`${ALL_RESOLVED_ALERT}`, {
       method: "GET",
       headers: auth.headers,
     });
@@ -162,11 +162,11 @@ export const AllResolvedAlert = async (navigate: ReturnType<typeof useNavigate>)
 export const AllUnResolvedAlert = async (navigate: ReturnType<typeof useNavigate>) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
-    const role = getRoleIDFromCookie();
+    //const role = getRoleIDFromCookie();
 
     if (!auth) return [];
 
-    const response = await fetch(`${ALL_UNRESOLVED_ALERT}/${role}`, {
+    const response = await fetch(`${ALL_UNRESOLVED_ALERT}`, {
       method: "GET",
       headers: auth.headers,
     });
@@ -370,7 +370,8 @@ export const fetchResolvedAlertProfessional = async (
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    return data
   } catch (error) {
     console.error("Failed to fetch devices:", error);
     throw error;
@@ -459,10 +460,6 @@ export const fetchPatientAssignmentHistory = async (
     }
 
     const data  = await response.json();
-
-    if (!data.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
-    }
     return data ;
   } catch (error) {
     console.error("Failed to fetch patient assignment history:", error);

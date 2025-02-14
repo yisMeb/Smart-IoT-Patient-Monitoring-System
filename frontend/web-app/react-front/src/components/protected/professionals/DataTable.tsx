@@ -35,7 +35,6 @@ export const DataTable = () => {
     setError(null);
     try {
       const response = await fetchPatientAlert(navigate);
-      console.log("Fetched data:", response);
 
       if (Array.isArray(response)) {
         setData(response);
