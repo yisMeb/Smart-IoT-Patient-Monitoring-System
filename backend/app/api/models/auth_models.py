@@ -14,7 +14,12 @@ class InstituteUpdate(BaseModel):
     
 class UserLogin(BaseModel):
     email: str  
-
+    
+class FailedLogin(BaseModel):
+    email: str
+    attempts: int
+    locked_until: date
+    
 class EditUser(BaseModel):
     phone_number: str
     given_name: str

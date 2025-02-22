@@ -67,7 +67,15 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
         if not record:
             raise HTTPException(status_code=404, detail="Failed to insert patient data")
         
-       #send email to patient
+        query = """
+            UPDATE public."device"
+            SET is_assigned = true
+            WHERE deviceid = $1
+            RETURNING deviceid
+        """
+        record = await db.fetchrow(query, patient.device_id)
+        
+        #send email to patient
         firebase_user = await create_firebase_user(patient.email)
         auth.set_custom_user_claims(firebase_user.uid, {"isTemporaryPassword": True}) #this will be set to false when user resets password
         reset_pass = await generate_password_reset_email(patient.email)
@@ -105,7 +113,6 @@ async def read_all_patients_service(db: asyncpg.Connection):
     """
     patients = await db.fetch(query)
     return patients
-
 
 async def read_all_patients_Alerts(professional_id: str, db: asyncpg.Connection):
     try:

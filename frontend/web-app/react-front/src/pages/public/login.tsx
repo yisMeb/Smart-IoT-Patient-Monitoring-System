@@ -25,6 +25,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [allFieldsFilled, setAllFieldsFilled] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [warningMessage, setWarningMessage] = useState("");
   const { setRoleName, setIsAuthenticated } = useUserRole();
   const navigate = useNavigate();
 
@@ -96,13 +97,25 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage("");
+    setWarningMessage("");
     if (!isValidEmail(email)) {
       setErrorMessage("Please enter a valid email address.");
       setIsLoading(false);
       return;
     }
+    const isNotLocked = await checkIfLocked();
+    if (!isNotLocked) {
+      setIsLoading(false);
+      return;
+    }
     try {
-
+      const response = await fetch(import.meta.env.VITE_API_LOGIN, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
         try{
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const idToken = await userCredential.user.getIdToken();
@@ -110,8 +123,42 @@ export default function Login() {
               console.error('Failed to retrieve ID token');
               return;
             }
+
+            // Reset failed login attempts on successful login
+            await fetch(`${import.meta.env.VITE_API_RESET_LOCK}/${email}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+            });
+
         }catch (error) {
           if (error instanceof FirebaseError) {
+            const failedAttemptResponse = await fetch(`${import.meta.env.VITE_API_TRACK_LOCK}/${email}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+            });
+            
+            if (!failedAttemptResponse.ok) {
+              const data = await failedAttemptResponse.json();
+              const lockTimeMatch = data.detail.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
+              if (lockTimeMatch) {
+                const lockTime = new Date(lockTimeMatch[0]);
+                const currentTime = new Date();
+                const timeLeftMs = lockTime.getTime() - currentTime.getTime();
+
+                if (timeLeftMs > 0) {
+                  const minutesLeft = Math.floor(timeLeftMs / 60000);
+                  const secondsLeft = Math.floor((timeLeftMs % 60000) / 1000);
+
+                  setWarningMessage(`Too many login attempts: your account is locked. Please try again in ${minutesLeft} minutes and ${secondsLeft} seconds.`);
+                } else {
+                  setWarningMessage("Too many login attempts: your account is locked. Please try again soon.");
+                }
+              }else {
+                setWarningMessage(data.detail);
+              }
+              console.log('faled attampt msg ', data.detail)
+            }
+
             if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
               setErrorMessage("Incorrect email or password.");
             } else if (error.code === 'auth/invalid-email') {
@@ -121,18 +168,12 @@ export default function Login() {
             }else {
               setErrorMessage("An authentication error occurred. Please try again.");
             }
+
           } else {
             console.error('Unexpected error:', error);
           }
           return;
         }
-      const response = await fetch(import.meta.env.VITE_API_LOGIN, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
 
       if (!response.ok) {
         setIsLoading(false);
@@ -156,6 +197,7 @@ export default function Login() {
           const idToken = await currentUser.getIdToken();
           const { user_id, user_role, role_specific_id } = data.user_data;
           const verificationStatus = data.verification_status;
+          const mfaStatus = data.mfa_status;
 
           setIdTokenCookie(idToken, user_role, role_specific_id);
           setIsAuthenticated(true);
@@ -164,14 +206,12 @@ export default function Login() {
           if (!verificationStatus) {
             await sendEmailVerification(currentUser);
             navigate("/verify-email", { state: { email, user_id } });
-          } else {
-            if (user_role === "institution") {
-              navigate("/institutes/h-provider");
-            } else if (user_role === "professional") {
-              navigate("/professionals/dashboard");
-            } else if (user_role === "patient") {
-              navigate("/patients/dashboard");
-            }
+          }
+          if (!mfaStatus) {
+            navigate("/enable-mfa", { state: { email, user_id } });
+          } 
+          else {
+           navigate("/verify-mfa", {state:{email, user_id, user_role}})
           }
           setRole(user_role);
           console.log(role);
@@ -195,6 +235,36 @@ export default function Login() {
     }
   };
 
+  const checkIfLocked = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_IS_LOCKED}/${email}`);
+      if (!response.ok) {
+        const data = await response.json();
+        const lockTimeMatch = data.detail.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
+        if (lockTimeMatch) {
+          const lockTime = new Date(lockTimeMatch[0] + " UTC");
+          const currentTimeUtc = new Date(new Date().toISOString());
+          const timeLeftMs = lockTime.getTime() - currentTimeUtc.getTime();
+          if (timeLeftMs >= 0) {
+            const minutesLeft = Math.floor(timeLeftMs / 60000);
+            const secondsLeft = Math.floor((timeLeftMs % 60000) / 1000);
+            setWarningMessage(`Too many login attempts: your account is locked. Please try again in ${minutesLeft} minutes and ${secondsLeft} seconds.`);
+          } else {
+            setWarningMessage("Too many login attempts: your account is locked. Please try again soon.");
+          }  
+              
+      }else {
+          setWarningMessage(data.detail);
+      }
+      return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error checking lock status:", error);
+      return false;
+    }
+  };
+  
   return (
     <div className="flex min-h-screen">
       <div className="hidden w-[400px] bg-[#0066FF] p-12 flex-col justify-between lg:flex">
@@ -244,14 +314,19 @@ export default function Login() {
             Welcome back
           </h1>
 
-          {errorMessage && (
-            <div
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-              role="alert"
-            >
-              <span className="block sm:inline">{errorMessage}</span>
-            </div>
-          )}
+          {warningMessage && typeof warningMessage === "string" && warningMessage.trim() !== "" && (
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-2" role="alert">
+                <h3 className="block sm:inline">{warningMessage}</h3>
+              </div>
+            )}
+            {errorMessage && (
+              <div
+                className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+                role="alert"
+              >
+                <span className="block sm:inline">{errorMessage}</span>
+              </div>
+            )}
           {/* form part */}
           <div>
             <form

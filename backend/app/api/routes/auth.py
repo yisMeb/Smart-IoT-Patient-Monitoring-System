@@ -2,7 +2,7 @@ import asyncpg
 from fastapi import APIRouter, Depends, HTTPException
 from firebase_admin import auth
 from app.api.models.auth_models import InstituteSignup, UserLogin
-from app.api.services.auth_services import fetch_Institution_by_id, fetch_user_by_email, login, signupInstitute
+from app.api.services.auth_services import fetch_Institution_by_id, fetch_user_by_email, is_user_locked, login, reset_failed_attempts, signupInstitute, track_failed_attempt
 from app.config.database import get_db_conn
 from app.api.dependacies import get_current_user
 
@@ -46,3 +46,22 @@ async def fetch_User(email: str, db = Depends(get_db_conn), current_user: dict =
         "user_data": user_data,
         "user_role": user_role
     }
+
+
+@router.post("/track-failed-login/{email}")
+async def track_failed_login(email: str, db: asyncpg.Connection = Depends(get_db_conn)):
+    """Track a failed login attempt."""
+    await track_failed_attempt(email, db)
+    return {"message": "Failed attempt tracked."}
+
+@router.post("/reset-failed-login/{email}")
+async def reset_failed_login(email: str, db: asyncpg.Connection = Depends(get_db_conn)):
+    """Reset failed login attempts."""
+    await reset_failed_attempts(email, db)
+    return {"message": "Failed attempts reset."}
+
+@router.get("/is-locked/{email}")
+async def check_lock_status(email: str, db: asyncpg.Connection = Depends(get_db_conn)):
+    """Check if the user is locked."""
+    await is_user_locked(email, db)
+    return {"message": "User is not locked."}

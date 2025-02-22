@@ -1,10 +1,14 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 import asyncpg
 from fastapi import HTTPException
 from app.api.models.auth_models import InstituteSignup, InstituteUpdate, UserLogin
 from app.api.models.other_models import validate_input
 from firebase_admin import auth
+
+
+MAX_ATTEMPTS = 6
+LOCK_DURATION = timedelta(minutes=15)
 
 async def signupInstitute(user: InstituteSignup, db: asyncpg.Connection):
     Urole = "Institution"
@@ -53,7 +57,11 @@ async def signupInstitute(user: InstituteSignup, db: asyncpg.Connection):
         raise HTTPException(status_code=500, detail={"message": f"Failed to create user: {str(e)}"})
 
 async def login(user: UserLogin, db: asyncpg.Connection):
+    await is_user_locked(user.email, db)
+    
     verification_status = await check_user_verification(user.email)
+    mfa_status = await check_mfa_status(user.email, db)
+    
     try:
         firebase_user = auth.get_user_by_email(user.email)
         custom_token = auth.create_custom_token(firebase_user.uid)
@@ -71,6 +79,8 @@ async def login(user: UserLogin, db: asyncpg.Connection):
         else:
             raise HTTPException(status_code=400, detail="User role not identified.")
         
+        await reset_failed_attempts(user.email, db)
+        
         minimal_user_data = {
             "user_id": user_data["user_id"],
             "email": user_data["email"],
@@ -83,12 +93,14 @@ async def login(user: UserLogin, db: asyncpg.Connection):
             "message": "User logged in successfully.",
             "custom_token": custom_token.decode("utf-8"),
             "user_data": minimal_user_data,
-            "verification_status":verification_status 
+            "verification_status":verification_status,
+            "mfa_status": mfa_status
         }
     except auth.UserNotFoundError:
         raise HTTPException(status_code=404, detail="User not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail="An unexpected error occurred: " + str(e))
+
 
 async def check_user_verification(email: str):
     try:
@@ -99,6 +111,10 @@ async def check_user_verification(email: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching user: {str(e)}")
+
+async def check_mfa_status(email: str, db: asyncpg.Connection) -> bool:
+    result = await db.fetchrow("SELECT email FROM public.user_mfa WHERE email = $1", email)
+    return result is not None 
 
 async def add_users(db:asyncpg.Connection, email: str, role_id: str, institution_id: str = None, professional_id: str = None, patient_id: str = None):
     current_date = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -196,3 +212,48 @@ async def fetch_Institution_by_id(id: str, db: asyncpg.Connection):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+async def track_failed_attempt(email: str, db: asyncpg.Connection):
+    """Track failed login attempts and lock the user if exceeded."""
+    existing_attempt = await db.fetchrow("SELECT * FROM public.failed_logins WHERE email = $1", email)
+
+    if existing_attempt:
+        if existing_attempt["locked_until"] and existing_attempt["locked_until"] > datetime.utcnow():
+            raise HTTPException(status_code=403, detail="Too many failed attempts. Try again later.")
+
+        new_attempts = existing_attempt["attempts"] + 1
+        lock_until = datetime.utcnow() + LOCK_DURATION if new_attempts >= MAX_ATTEMPTS else None
+
+        await db.execute(
+            "UPDATE failed_logins SET attempts = $1, locked_until = $2 WHERE email = $3",
+            new_attempts, lock_until, email
+        )
+        if new_attempts >= MAX_ATTEMPTS:
+            raise HTTPException(status_code=403, detail=f"Account locked. Try again at {lock_until.strftime('%Y-%m-%d %H:%M:%S')}.")
+        
+    else:
+        await db.execute(
+            "INSERT INTO failed_logins (email, attempts) VALUES ($1, 1)",
+            email
+        )
+
+async def reset_failed_attempts(email: str, db: asyncpg.Connection):
+    """Reset failed login attempts on successful authentication."""
+    await db.execute("DELETE FROM failed_logins WHERE email = $1", email)
+
+async def is_user_locked(email: str, db: asyncpg.Connection):
+    """Check if the user is locked and prevent login if so."""
+    locked_user = await db.fetchrow("SELECT * FROM public.failed_logins WHERE email = $1", email)
+
+    if locked_user and locked_user["locked_until"]:
+        current_time_utc = datetime.now(timezone.utc)
+        
+        locked_until = locked_user["locked_until"]
+        if locked_until.tzinfo is None:
+            locked_until = locked_until.replace(tzinfo=timezone.utc)
+
+        if locked_until > current_time_utc:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Too many failed attempts. Try again after {locked_until}."
+            )
