@@ -17,6 +17,8 @@ import Alerts from "./pages/protected/professionals/Alerts";
 import PatientsDashbaord from "./pages/protected/patients/PatientsDashboard";
 import ProfilePatient from "./pages/protected/patients/Profile";
 import ForgotPassword from "./pages/public/ForgotPassword";
+import EnableMFA from "./pages/public/EnableMFA";
+import VerifyMFA from "./pages/public/VerifyMFA";
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/enable-mfa" element={<EnableMFA />} />
+          <Route path="/verify-mfa" element={<VerifyMFA />} />
           <Route path="*" element={<NoPage />} />
 
           {/* Protected routes */}

@@ -10,3 +10,5 @@ phonenumbers
 python-multipart
 httpx
 pydantic[email]
+pyotp
+pyqrcode pypng
