@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { sendEmailVerification, signInWithCustomToken, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebaseConfig";
 import {
-  getIdTokenFromCookies,
+  /* getIdTokenFromCookies,
   getRoleFromCookies,
-  isTokenExpired,
+  isTokenExpired, */
   setIdTokenCookie,
 } from "../../lib/cookieUtils";
 import { useUserRole } from "../../context/UserRoleContext";
@@ -29,7 +29,7 @@ export default function Login() {
   const { setRoleName, setIsAuthenticated } = useUserRole();
   const navigate = useNavigate();
 
-  useEffect(() => {
+  /* useEffect(() => {
     const handleAuthState = async () => {
       const role = getRoleFromCookies();
       const idToken = getIdTokenFromCookies();
@@ -77,7 +77,7 @@ export default function Login() {
 
     handleAuthState();
   }, [navigate]);
-
+ */
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
