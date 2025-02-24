@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { sendEmailVerification, signInWithCustomToken, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebaseConfig";
 import {
-  getIdTokenFromCookies,
+  /* getIdTokenFromCookies,
   getRoleFromCookies,
-  isTokenExpired,
+  isTokenExpired, */
   setIdTokenCookie,
 } from "../../lib/cookieUtils";
 import { useUserRole } from "../../context/UserRoleContext";
