@@ -19,83 +19,107 @@ async def create_patient_service(patient: PatientCreate, db: asyncpg.Connection)
             "email": patient.email,
             "address": patient.address
         })
-        
+
         # Validate and format the phone number
         formatted_phone_number = validate_phone_number(patient.contact_number)
-       
+
+        # **Check if email already exists in Firebase**
+        try:
+            firebase_user = auth.get_user_by_email(patient.email)
+            if firebase_user:
+                raise HTTPException(status_code=400, detail="Email already registered in Firebase")
+        except auth.UserNotFoundError:
+            pass  # Email is not found, proceed with registration
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Firebase error: {e}")
+
+        # **Insert patient into the database**
         query = """
-                INSERT INTO public.patients (
-                    institution_id, 
-                    name, 
-                    dob, 
-                    contact_number, 
-                    email, 
-                    address, 
-                    created_at,
-                    device_id, 
-                    status, 
-                    oxygen_threshold, 
-                    heartrate_threshold, 
-                    temperature_threshold, 
-                    oxygen_threshold_lower, 
-                    heartrate_threshold_lower, 
-                    temperature_threshold_lower, 
-                    professional_id
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-                RETURNING patient_id, institution_id
-            """
+            INSERT INTO public.patients (
+                institution_id, 
+                name, 
+                dob, 
+                contact_number, 
+                email, 
+                address, 
+                created_at,
+                device_id, 
+                status, 
+                oxygen_threshold, 
+                heartrate_threshold, 
+                temperature_threshold, 
+                oxygen_threshold_lower, 
+                heartrate_threshold_lower, 
+                temperature_threshold_lower, 
+                professional_id
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            RETURNING patient_id, institution_id
+        """
         record = await db.fetchrow(
             query,
             patient.institution_id,
-            patient.name, 
-            patient.dob, 
-            formatted_phone_number, 
-            patient.email, 
-            patient.address, 
+            patient.name,
+            patient.dob,
+            formatted_phone_number,
+            patient.email,
+            patient.address,
             current_date,
-            patient.device_id, 
-            patient.status.lower(), 
-            patient.oxygen_threshold, 
-            patient.heartrate_threshold,  
+            patient.device_id,
+            patient.status.lower(),
+            patient.oxygen_threshold,
+            patient.heartrate_threshold,
             patient.temperature_threshold,
-            patient.oxygen_threshold_lower, 
-            patient.heartrate_threshold_lower, 
+            patient.oxygen_threshold_lower,
+            patient.heartrate_threshold_lower,
             patient.temperature_threshold_lower,
             patient.professional_id
-            )
+        )
+
         if not record:
             raise HTTPException(status_code=404, detail="Failed to insert patient data")
-        
+
+        # **Update device assignment**
         query = """
             UPDATE public."device"
             SET is_assigned = true
             WHERE deviceid = $1
             RETURNING deviceid
         """
-        record = await db.fetchrow(query, patient.device_id)
-        
-        #send email to patient
-        firebase_user = await create_firebase_user(patient.email)
-        auth.set_custom_user_claims(firebase_user.uid, {"isTemporaryPassword": True}) #this will be set to false when user resets password
-        reset_pass = await generate_password_reset_email(patient.email)
-        assignment_id, role_id = await asign_role(db, patient.institution_id, Urole)
-        
-        if assignment_id is None or role_id is None:
-            raise HTTPException(status_code=500, detail={"message": "Role creation failed."})
+        device_record = await db.fetchrow(query, patient.device_id)
 
+        if not device_record:
+            raise HTTPException(status_code=404, detail="Device assignment failed")
+
+        # **Create Firebase user since email is verified to be unique**
+        firebase_user = await create_firebase_user(patient.email)
+        auth.set_custom_user_claims(firebase_user.uid, {"isTemporaryPassword": True})  # Mark as temp password
+
+        # **Generate password reset link**
+        reset_pass = await generate_password_reset_email(patient.email)
+
+        # **Assign role in the database**
+        assignment_id, role_id = await asign_role(db, patient.institution_id, Urole)
+
+        if assignment_id is None or role_id is None:
+            raise HTTPException(status_code=500, detail="Role creation failed.")
+
+        # **Add user record**
         await add_users(db, email=patient.email, role_id=role_id, patient_id=record["patient_id"])
-        
+
         return {
-           "patient_id": record["patient_id"],
-           "institution_id": record["institution_id"],
-           "reset_pass_link": reset_pass,
+            "patient_id": record["patient_id"],
+            "institution_id": record["institution_id"],
+            "reset_pass_link": reset_pass,
         }
-    
+
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
     except asyncpg.PostgresError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
     
 async def read_patient_service(patient_id: str, db: asyncpg.Connection):
     query = """
