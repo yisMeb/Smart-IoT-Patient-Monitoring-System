@@ -720,29 +720,31 @@ export const fetchPatientTreshold = async (
 export const updatePatientThreshold = async (
   navigate: ReturnType<typeof useNavigate>,
   patient_id: string,
-  thresholdData: {
+  thresholdData: Partial<{
     heartrate_threshold_lower: number;
     heartrate_threshold: number;
     oxygen_threshold_lower: number;
     oxygen_threshold: number;
     temperature_threshold_lower: number;
     temperature_threshold: number;
-  }
+  }>
 ) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
 
     if (!auth) return;
+    const cleanedThresholdData = Object.fromEntries(
+      Object.entries(thresholdData).filter(([ value]) => value !== undefined)
+    );
 
     const response = await fetch(`${UPDATE_PATIENT_TRESHOLD}/${patient_id}`, {
       method: "PUT",
       headers: {
         ...auth.headers,
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(thresholdData),
+      body: JSON.stringify(cleanedThresholdData),
     });
-
     if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }

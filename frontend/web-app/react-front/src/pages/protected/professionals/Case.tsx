@@ -1,16 +1,16 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Phone, Mail, User, Cpu, Heart, Wind, Thermometer, Loader2 } from "lucide-react"
+import { Phone, Mail, User, Cpu, Heart, Wind, Thermometer } from "lucide-react"
 import { fetchCase, fetchPatientTreshold, updatePatientThreshold } from "../../../service/api"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Loader } from "lucide-react"
 
 interface Patient {
   patient_id: string
@@ -39,11 +39,15 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
   })
   const [editingThreshold, setEditingThreshold] = useState<string | null>(null)
   const [thresholdInputs, setThresholdInputs] = useState<{ [key: string]: { lower: string; upper: string } }>({})
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // Add loading states
   const [isTimelineLoading, setIsTimelineLoading] = useState(true)
   const [isThresholdsLoading, setIsThresholdsLoading] = useState(true)
-  const [isUpdatingThreshold, setIsUpdatingThreshold] = useState(false)
+  const [loadingThresholds, setLoadingThresholds] = useState<{ [key: string]: boolean }>({
+    Hearthrate: false,
+    Oxygene: false,
+    Temperature: false,
+  })
 
   const navigate = useNavigate()
 
@@ -77,42 +81,60 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
   useEffect(() => {
     const loadThresholds = async () => {
       setIsThresholdsLoading(true)
+      setIsRefreshing(true)
       try {
+
         const data = await fetchPatientTreshold(navigate, patient.patient_id)
         setThresholds(data)
       } catch (error) {
         console.error("Error fetching patient thresholds:", error)
       } finally {
         setIsThresholdsLoading(false)
+        setIsRefreshing(false)
       }
     }
     loadThresholds()
   }, [navigate, patient.patient_id])
 
   const handleSaveThreshold = async (key: string) => {
-    setIsUpdatingThreshold(true)
-    console.log(key)
+    setLoadingThresholds((prev) => ({ ...prev, [key]: true }));
+  
     try {
-      const thresholdData = {
-        heartrate_threshold_lower: Number.parseFloat(thresholdInputs["Hearthrate"]?.lower) || 0,
-        heartrate_threshold: Number.parseFloat(thresholdInputs["Hearthrate"]?.upper) || 0,
-        oxygen_threshold_lower: Number.parseFloat(thresholdInputs["Oxygene"]?.lower) || 0,
-        oxygen_threshold: Number.parseFloat(thresholdInputs["Oxygene"]?.upper) || 0,
-        temperature_threshold_lower: Number.parseFloat(thresholdInputs["Temperature"]?.lower) || 0,
-        temperature_threshold: Number.parseFloat(thresholdInputs["Temperature"]?.upper) || 0,
+      const thresholdData: { [key: string]: number | undefined } = {};
+  
+      if (key === "Hearthrate" && thresholdInputs["Hearthrate"]) {
+        thresholdData.heartrate_threshold_lower = Number.parseFloat(thresholdInputs["Hearthrate"].lower);
+        thresholdData.heartrate_threshold = Number.parseFloat(thresholdInputs["Hearthrate"].upper);
       }
+      if (key === "Oxygene" && thresholdInputs["Oxygene"]) {
+        thresholdData.oxygen_threshold_lower = Number.parseFloat(thresholdInputs["Oxygene"].lower);
+        thresholdData.oxygen_threshold = Number.parseFloat(thresholdInputs["Oxygene"].upper);
+      }
+      if (key === "Temperature" && thresholdInputs["Temperature"]) {
+        thresholdData.temperature_threshold_lower = Number.parseFloat(thresholdInputs["Temperature"].lower);
+        thresholdData.temperature_threshold = Number.parseFloat(thresholdInputs["Temperature"].upper);
+      }
+  
+      await updatePatientThreshold(navigate, patient.patient_id, thresholdData);
 
-      await updatePatientThreshold(navigate, patient.patient_id, thresholdData)
-      setEditingThreshold(null)
-
-      const updatedThresholds = await fetchPatientTreshold(navigate, patient.patient_id)
-      setThresholds(updatedThresholds)
+      setEditingThreshold(null);
     } catch (error) {
-      console.error("Error updating threshold:", error)
+      console.error("Error updating threshold:", error);
     } finally {
-      setIsUpdatingThreshold(false)
+      const updatedThresholds = await fetchPatientTreshold(navigate, patient.patient_id);
+      setThresholds(updatedThresholds);
+      window.location.reload()
+      setThresholdInputs((prev) => ({
+        ...prev,
+        [key]: { 
+          lower: updatedThresholds[key]?.split("-")[0]?.trim() || "",
+          upper: updatedThresholds[key]?.split("-")[1]?.trim() || ""
+        }
+      }));
+      setLoadingThresholds((prev) => ({ ...prev, [key]: false }));
     }
-  }
+  };
+  
 
   const handleEditClick = (key: string, value: string) => {
     const [lower, upper] = value.split("-").map((v) => v.trim())
@@ -131,7 +153,6 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
   return (
     <div className="w-full max-w-2xl mx-auto p-4">
       <div className="space-y-6">
-        {/* Patient Card - No loading state needed as data is passed as prop */}
         <Card>
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -161,7 +182,7 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
           </CardContent>
         </Card>
 
-        {/* Timeline Card with Loading State */}
+        {/* Timeline  */}
         <Card>
           <CardHeader>
             <h3 className="text-lg font-semibold">Timeline</h3>
@@ -196,14 +217,14 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
           </CardContent>
         </Card>
 
-        {/* Thresholds Card with Loading State */}
+        {/* Thresholds */}
         <Card>
           <CardHeader>
             <h3 className="text-lg font-semibold">Threshold</h3>
             <p className="text-sm text-muted-foreground">Individual Threshold</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            {isThresholdsLoading ? (
+            {isThresholdsLoading || isRefreshing ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center justify-between">
@@ -232,42 +253,45 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {editingThreshold === key ? (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          className="w-16 border p-1 rounded-md text-sm"
-                          placeholder="Lower"
-                          value={thresholdInputs[key]?.lower || ""}
-                          onChange={(e) => handleInputChange(key, "lower", e.target.value)}
-                        />
-                        <span>-</span>
-                        <input
-                          type="number"
-                          className="w-16 border p-1 rounded-md text-sm"
-                          placeholder="Upper"
-                          value={thresholdInputs[key]?.upper || ""}
-                          onChange={(e) => handleInputChange(key, "upper", e.target.value)}
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSaveThreshold(key)}
-                          disabled={isUpdatingThreshold}
-                        >
-                          {isUpdatingThreshold ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <div className="text-sm">{value}</div>
-                        <Button variant="outline" size="sm" onClick={() => handleEditClick(key, value)}>
-                          Update
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                  {editingThreshold === key ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        className="w-16 border p-1 rounded-md text-sm"
+                        placeholder="Lower"
+                        value={thresholdInputs[key]?.lower || ""}
+                        onChange={(e) => handleInputChange(key, "lower", e.target.value)}
+                      />
+                      <span>-</span>
+                      <input
+                        type="number"
+                        className="w-16 border p-1 rounded-md text-sm"
+                        placeholder="Upper"
+                        value={thresholdInputs[key]?.upper || ""}
+                        onChange={(e) => handleInputChange(key, "upper", e.target.value)}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleSaveThreshold(key)}
+                        disabled={loadingThresholds[key]}
+                      >
+                        {loadingThresholds[key] ? <Loader className="w-4 h-4 animate-spin" /> : "Save"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm">{value}</div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditClick(key, value)}
+                        disabled={loadingThresholds[key]}
+                      >
+                        {loadingThresholds[key] ? <Loader className="w-4 h-4 animate-spin" /> : "Update"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))
             )}

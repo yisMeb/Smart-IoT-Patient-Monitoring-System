@@ -275,17 +275,28 @@ async def get_patient_Threshold(id: str, db: asyncpg.Connection):
 
 
 async def update_patient_threshold(id: str, update_data: PatientUpdateThreshold, db: asyncpg.Connection):
-    print("Here")
-    query_check = """
-        SELECT 1
-        FROM public.patients
-        WHERE patient_id = $1
+    print("Updating thresholds for patient:", id)
+
+    # Fetch existing values
+    query_get = """
+        SELECT heartrate_threshold_lower, heartrate_threshold, oxygen_threshold_lower, 
+               oxygen_threshold, temperature_threshold_lower, temperature_threshold
+        FROM public.patients WHERE patient_id = $1
     """
-    result = await db.fetchrow(query_check, id)
-    if result is None:
+    existing = await db.fetchrow(query_get, id)
+    if not existing:
         raise ValueError(f"Patient with ID {id} not found")
 
-    # Update the threshold values
+    # Keep previous values if fields are not sent
+    update_values = {
+        "heartrate_threshold_lower": update_data.heartrate_threshold_lower or existing["heartrate_threshold_lower"],
+        "heartrate_threshold": update_data.heartrate_threshold or existing["heartrate_threshold"],
+        "oxygen_threshold_lower": update_data.oxygen_threshold_lower or existing["oxygen_threshold_lower"],
+        "oxygen_threshold": update_data.oxygen_threshold or existing["oxygen_threshold"],
+        "temperature_threshold_lower": update_data.temperature_threshold_lower or existing["temperature_threshold_lower"],
+        "temperature_threshold": update_data.temperature_threshold or existing["temperature_threshold"],
+    }
+
     query_update = """
         UPDATE public.patients
         SET 
@@ -297,14 +308,4 @@ async def update_patient_threshold(id: str, update_data: PatientUpdateThreshold,
             temperature_threshold = $6
         WHERE patient_id = $7
     """
-
-    await db.execute(
-        query_update, 
-        update_data.heartrate_threshold_lower, 
-        update_data.heartrate_threshold, 
-        update_data.oxygen_threshold_lower, 
-        update_data.oxygen_threshold, 
-        update_data.temperature_threshold_lower, 
-        update_data.temperature_threshold, 
-        id
-    )
+    await db.execute(query_update, *update_values.values(), id)
