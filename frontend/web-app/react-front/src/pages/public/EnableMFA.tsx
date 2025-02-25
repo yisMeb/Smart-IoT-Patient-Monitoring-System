@@ -17,7 +17,7 @@ export default function EnableMFA() {
   const [isSkippingMFASetup, setIsSkippingMFASetup] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-
+  const user_role: "institution" | "professional" | "patient" = location.state?.user_role || ""
   const email = location.state?.email || ""
 
   useEffect(() => {
@@ -30,8 +30,7 @@ export default function EnableMFA() {
         if (!response.ok) {
           throw new Error("Failed to fetch data")
         }
-        const data = await response.json()
-        console.log(data)
+        await response.json()
       } catch (err) {
         if (err instanceof Error) {
           setPageDataError(err.message || "An unknown error occurred")
@@ -56,7 +55,6 @@ export default function EnableMFA() {
       })
 
       const data = await response.json()
-      console.log("Data ", data)
       if (!response.ok) {
         throw new Error(data.message || "Failed to enable MFA")
       }
@@ -82,7 +80,14 @@ export default function EnableMFA() {
       if (!response.ok) {
         throw new Error("Failed to skip MFA Setup")
       }
-      navigate("/login")
+       // Role-based navigation
+       const roleRoutes = {
+        institution: "/institutes/h-provider",
+        professional: "/professionals/dashboard",
+        patient: "/patients/dashboard",
+      }
+
+      navigate(roleRoutes[user_role] || "/")
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message || "Failed To Skip Setup")
@@ -229,7 +234,7 @@ export default function EnableMFA() {
                   <p className="text-center text-sm text-muted-foreground">
                     Scan this QR code with <span className="font-bold">Google Authenticator App</span>
                   </p>
-                  <Button className="w-full" onClick={() => navigate("/login")}>
+                  <Button className="w-full" onClick={() => handleSkipMFASetupWithAPIcall()}>
                     Continue
                   </Button>
                   <Button
