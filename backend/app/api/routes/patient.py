@@ -76,7 +76,6 @@ async def get_threshold(patient_id: str, db = Depends(get_db_conn), current_user
     
 @router.put("/thresholds/update/{patient_id}")
 async def update_threshold(patient_id: str, update_data: PatientUpdateThreshold, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
-    print("HHHH")
     if current_user["user_role"] == "professional":
         try:
             await update_patient_threshold(patient_id, update_data, db)
