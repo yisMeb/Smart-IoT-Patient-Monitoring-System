@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.api.models.patient_models import PatientCreate, PatientUpdate
-from app.api.services.patient_services import create_patient_service, delete_patient_service, get_patient_Threshold, patients_for_professional, read_all_patients_Alerts, read_all_patients_service, read_patient_service, update_patient_service
+from app.api.models.patient_models import PatientCreate, PatientUpdate, PatientUpdateThreshold
+from app.api.services.patient_services import create_patient_service, delete_patient_service, get_patient_Threshold, patients_for_professional, read_all_patients_Alerts, read_all_patients_service, read_patient_service, update_patient_service, update_patient_threshold
 from app.config.database import get_db_conn
 from app.api.dependacies import get_current_user
 
@@ -72,3 +72,17 @@ async def get_threshold(patient_id: str, db = Depends(get_db_conn), current_user
         return patient
     else:
         raise HTTPException(status_code=401, detail="Only loged in users can access this feature")
+    
+    
+@router.put("/thresholds/update/{patient_id}")
+async def update_threshold(patient_id: str, update_data: PatientUpdateThreshold, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
+    print("HHHH")
+    if current_user["user_role"] == "professional":
+        try:
+            await update_patient_threshold(patient_id, update_data, db)
+            return {"detail": "Thresholds updated successfully"}
+        except ValueError as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        raise HTTPException(status_code=401, detail="Only professionals and institutions can update thresholds")
+    

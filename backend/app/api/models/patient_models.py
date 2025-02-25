@@ -35,3 +35,13 @@ class PatientUpdate(BaseModel):
     class Config:
         from_attributes = True
 
+class PatientUpdateThreshold(BaseModel):
+    heartrate_threshold_lower: float
+    heartrate_threshold: float
+    oxygen_threshold_lower: float
+    oxygen_threshold: float
+    temperature_threshold_lower: float
+    temperature_threshold: float
+
+    class Config:
+        from_attributes = True

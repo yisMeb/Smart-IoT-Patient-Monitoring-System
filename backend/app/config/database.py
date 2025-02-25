@@ -44,7 +44,7 @@ class Database:
                 database=os.getenv("DB_NAME"),
                 host="127.0.0.1",  # Localhost after forwarding
                 port=local_forward_port,  # Forwarded port
-                min_size=5,
+                min_size=7,
                 max_size=20
             )
         except asyncssh.Error as e:
