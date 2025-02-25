@@ -16,6 +16,7 @@ const NOTIFICATION_BY_ID = import.meta.env.VITE_API_NOTIFICATION_BY_ID as string
 const Assigned_PATIENT = import.meta.env.VITE_API_GET_ASSIGNED_PATIENT as string;
 const ALL_RESOLVED_ALERT = import.meta.env.VITE_API_ALL_RESOLVED as string;
 const PATIENT_TRESHOLD = import.meta.env.VITE_API_PATIENT_TRESHOLD as string;
+const UPDATE_PATIENT_TRESHOLD = import.meta.env.VITE_API_UPDATE_PATIENT_TRESHOLD as string;
 const NEW_HEALTH_DATA = import.meta.env.VITE_API_NEW_HEALTH_DATA as string;
 const ALL_UNRESOLVED_ALERT = import.meta.env.VITE_API_ALL_UNRESOLVED as string;
 const PROFESSIONALBYID = import.meta.env.VITE_API_GET_PROFESSIONAL_BY_ID as string;
@@ -690,11 +691,12 @@ export const addDevice = async (device: {
 
 
 export const fetchPatientTreshold = async (
-  navigate: ReturnType<typeof useNavigate>
+  navigate: ReturnType<typeof useNavigate>,
+  patient_id: string | null = null
 ) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
-    const role = getRoleIDFromCookie();
+    const role = patient_id ?? getRoleIDFromCookie();
 
     if (!auth) return [];
 
@@ -713,6 +715,45 @@ export const fetchPatientTreshold = async (
     throw error;
   }
 };
+
+
+export const updatePatientThreshold = async (
+  navigate: ReturnType<typeof useNavigate>,
+  patient_id: string,
+  thresholdData: {
+    heartrate_threshold_lower: number;
+    heartrate_threshold: number;
+    oxygen_threshold_lower: number;
+    oxygen_threshold: number;
+    temperature_threshold_lower: number;
+    temperature_threshold: number;
+  }
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+
+    if (!auth) return;
+
+    const response = await fetch(`${UPDATE_PATIENT_TRESHOLD}/${patient_id}`, {
+      method: "PUT",
+      headers: {
+        ...auth.headers,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(thresholdData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to update patient threshold:", error);
+    throw error;
+  }
+};
+
 
 export const fetchNewHealthData= async (
   navigate: ReturnType<typeof useNavigate>,
@@ -742,11 +783,12 @@ export const fetchNewHealthData= async (
 
 
 export const fetchPatient_BY_ID = async (
-  navigate: ReturnType<typeof useNavigate>
+  navigate: ReturnType<typeof useNavigate>,
+  patient_id: string | null = null
 ) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
-    const role = getRoleIDFromCookie();
+    const role = patient_id ?? getRoleIDFromCookie();
 
     if (!auth) return;
 
@@ -795,11 +837,12 @@ export const fetchNewNotifications = async (
 }
 
 export const fetchCase = async (
-  navigate: ReturnType<typeof useNavigate>
+  navigate: ReturnType<typeof useNavigate>,
+  patient_id: string | null = null
 ) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
-    const role = getRoleIDFromCookie();
+    const role = patient_id ?? getRoleIDFromCookie();
 
     if (!auth) return;
 
@@ -822,9 +865,6 @@ export const fetchCase = async (
     throw error;
   }
 }
-
-
-
 
 export const postCase = async (
   navigate: ReturnType<typeof useNavigate>,

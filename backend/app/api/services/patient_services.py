@@ -2,7 +2,7 @@ import asyncpg
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from pydantic import ValidationError
-from app.api.models.patient_models import PatientCreate, PatientUpdate
+from app.api.models.patient_models import PatientCreate, PatientUpdate, PatientUpdateThreshold
 from app.api.models.other_models import validate_input, validate_phone_number
 from app.api.dependacies import create_firebase_user, generate_password_reset_email
 from firebase_admin import auth
@@ -272,3 +272,39 @@ async def get_patient_Threshold(id: str, db: asyncpg.Connection):
     }
 
     return thresholds
+
+
+async def update_patient_threshold(id: str, update_data: PatientUpdateThreshold, db: asyncpg.Connection):
+    print("Here")
+    query_check = """
+        SELECT 1
+        FROM public.patients
+        WHERE patient_id = $1
+    """
+    result = await db.fetchrow(query_check, id)
+    if result is None:
+        raise ValueError(f"Patient with ID {id} not found")
+
+    # Update the threshold values
+    query_update = """
+        UPDATE public.patients
+        SET 
+            heartrate_threshold_lower = $1,
+            heartrate_threshold = $2,
+            oxygen_threshold_lower = $3,
+            oxygen_threshold = $4,
+            temperature_threshold_lower = $5,
+            temperature_threshold = $6
+        WHERE patient_id = $7
+    """
+
+    await db.execute(
+        query_update, 
+        update_data.heartrate_threshold_lower, 
+        update_data.heartrate_threshold, 
+        update_data.oxygen_threshold_lower, 
+        update_data.oxygen_threshold, 
+        update_data.temperature_threshold_lower, 
+        update_data.temperature_threshold, 
+        id
+    )
