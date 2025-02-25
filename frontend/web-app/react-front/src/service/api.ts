@@ -12,33 +12,44 @@ import { format } from "date-fns";
 
 const ALL_PATIENT = import.meta.env.VITE_API_GET_ALL_PATIENTS as string;
 const PATIENT_BY_ID = import.meta.env.VITE_API_GET_PATIENT_BY_ID as string;
-const NOTIFICATION_BY_ID = import.meta.env.VITE_API_NOTIFICATION_BY_ID as string;
-const Assigned_PATIENT = import.meta.env.VITE_API_GET_ASSIGNED_PATIENT as string;
+const NOTIFICATION_BY_ID = import.meta.env
+  .VITE_API_NOTIFICATION_BY_ID as string;
+const Assigned_PATIENT = import.meta.env
+  .VITE_API_GET_ASSIGNED_PATIENT as string;
 const ALL_RESOLVED_ALERT = import.meta.env.VITE_API_ALL_RESOLVED as string;
 const PATIENT_TRESHOLD = import.meta.env.VITE_API_PATIENT_TRESHOLD as string;
-const UPDATE_PATIENT_TRESHOLD = import.meta.env.VITE_API_UPDATE_PATIENT_TRESHOLD as string;
+const UPDATE_PATIENT_TRESHOLD = import.meta.env
+  .VITE_API_UPDATE_PATIENT_TRESHOLD as string;
 const NEW_HEALTH_DATA = import.meta.env.VITE_API_NEW_HEALTH_DATA as string;
 const ALL_UNRESOLVED_ALERT = import.meta.env.VITE_API_ALL_UNRESOLVED as string;
-const PROFESSIONALBYID = import.meta.env.VITE_API_GET_PROFESSIONAL_BY_ID as string;
+const PROFESSIONALBYID = import.meta.env
+  .VITE_API_GET_PROFESSIONAL_BY_ID as string;
 const INSTITUTEBYID = import.meta.env.VITE_API_GET_INSTITUTE_BY_ID as string;
 const ADD_PATIENT = import.meta.env.VITE_API_ADD_PATIENT as string;
 const UPDATE_PATIENT = import.meta.env.VITE_API_UPDATE_PATIENT as string;
-const All_PROFESSIONALS = import.meta.env.VITE_API_GET_ALL_PROFESSIONALS as string;
-const UPDATE_PROFESSIONAL = import.meta.env.VITE_API_UPDATE_PROFESSIONAL as string;
+const All_PROFESSIONALS = import.meta.env
+  .VITE_API_GET_ALL_PROFESSIONALS as string;
+const UPDATE_PROFESSIONAL = import.meta.env
+  .VITE_API_UPDATE_PROFESSIONAL as string;
 const ADD_PROFESSIONAL = import.meta.env.VITE_API_ADD_PROFESSIONAL as string;
 const ALL_DEVICES = import.meta.env.VITE_API_GET_ALL_DEVICES as string;
 const PATIENT_ALERT = import.meta.env.VITE_API_PATIENT_ALERT as string;
 const ALL_ALERT_PRO = import.meta.env.VITE_API_TOTAL_ALERT_PRO as string;
-const RESOLVED_ALERT_PRO = import.meta.env.VITE_API_RESOLVED_ALERT_PRO as string;
-const UNRESOLVED_ALERT_PRO = import.meta.env.VITE_API_UNRESOLVED_ALERT_PRO as string;
-const PATIENT_ALERT_Table = import.meta.env.VITE_API_PATIENT_ALERT_Table as string;
-const PATIENT_ASSIGN_hISTORY = import.meta.env.VITE_API_PATIENT_ASSIGN_hISTORY as string;
+const RESOLVED_ALERT_PRO = import.meta.env
+  .VITE_API_RESOLVED_ALERT_PRO as string;
+const UNRESOLVED_ALERT_PRO = import.meta.env
+  .VITE_API_UNRESOLVED_ALERT_PRO as string;
+const PATIENT_ALERT_Table = import.meta.env
+  .VITE_API_PATIENT_ALERT_Table as string;
+const PATIENT_ASSIGN_hISTORY = import.meta.env
+  .VITE_API_PATIENT_ASSIGN_hISTORY as string;
 const ADD_DEVICE = import.meta.env.VITE_API_ADD_DEVICE as string;
 const UPDATE_DEVICE = import.meta.env.VITE_API_UPDATE_DEVICE as string;
 const UPDATE_PROVIDER = import.meta.env.VITE_API_UPDATE_PROVIDER as string;
-const GET_CASE= import.meta.env.VITE_API_CASE as string;
-const POST_CASE= import.meta.env.VITE_API_CASE_POST as string;
-const CONTACT_PROFESSIONAL= import.meta.env.VITE_API_CONTACT_PROFESSIONAL as string;
+const GET_CASE = import.meta.env.VITE_API_CASE as string;
+const POST_CASE = import.meta.env.VITE_API_CASE_POST as string;
+const CONTACT_PROFESSIONAL = import.meta.env
+  .VITE_API_CONTACT_PROFESSIONAL as string;
 
 const token = getIdTokenFromCookies();
 
@@ -52,7 +63,7 @@ interface Professional {
   created_at: string;
 }
 
-interface Provider{
+interface Provider {
   name: string;
   address: string;
   email: string;
@@ -89,7 +100,6 @@ interface Case {
   remark: string;
   professional_id: string;
 }
-
 
 const checkAuthAndGetHeaders = (navigate: ReturnType<typeof useNavigate>) => {
   const token = getIdTokenFromCookies();
@@ -133,7 +143,9 @@ export const fetchAllPatient = async (
   }
 };
 
-export const AllResolvedAlert = async (navigate: ReturnType<typeof useNavigate>) => {
+export const AllResolvedAlert = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
     //const role = getRoleIDFromCookie();
@@ -148,7 +160,7 @@ export const AllResolvedAlert = async (navigate: ReturnType<typeof useNavigate>)
     if (!response.ok) {
       const errorData = await response.json();
       if (errorData.detail === "Not Found") {
-        return []; 
+        return [];
       }
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
@@ -156,11 +168,13 @@ export const AllResolvedAlert = async (navigate: ReturnType<typeof useNavigate>)
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch resolved alerts:", error);
-    return []; 
+    return [];
   }
 };
 
-export const AllUnResolvedAlert = async (navigate: ReturnType<typeof useNavigate>) => {
+export const AllUnResolvedAlert = async (
+  navigate: ReturnType<typeof useNavigate>
+) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
     //const role = getRoleIDFromCookie();
@@ -175,7 +189,7 @@ export const AllUnResolvedAlert = async (navigate: ReturnType<typeof useNavigate
     if (!response.ok) {
       const errorData = await response.json();
       if (errorData.detail === "Not Found") {
-        return []; 
+        return [];
       }
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
@@ -183,10 +197,9 @@ export const AllUnResolvedAlert = async (navigate: ReturnType<typeof useNavigate
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch unresolved alerts:", error);
-    return []; 
+    return [];
   }
 };
-
 
 export const fetchAssingnedPatients = async (
   navigate: ReturnType<typeof useNavigate>
@@ -342,7 +355,7 @@ export const fetchAllAlertProfess = async (
       method: "GET",
       headers: auth.headers,
     });
-   
+
     if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
@@ -372,7 +385,7 @@ export const fetchResolvedAlertProfessional = async (
     }
 
     const data = await response.json();
-    return data
+    return data;
   } catch (error) {
     console.error("Failed to fetch devices:", error);
     throw error;
@@ -460,14 +473,13 @@ export const fetchPatientAssignmentHistory = async (
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
 
-    const data  = await response.json();
-    return data ;
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error("Failed to fetch patient assignment history:", error);
     throw error;
   }
 };
-
 
 export const updateProfessional = async (
   navigate: ReturnType<typeof useNavigate>,
@@ -613,11 +625,11 @@ export const addPatient = async (
       heartrate_threshold_lower: patient.heartrate_threshold_lower || 0,
       temperature_threshold_lower: patient.temperature_threshold_lower || 0,
     };
-    console.log(patientData);
+    //console.log(patientData);
     const response = await fetch(`${ADD_PATIENT}`, {
       method: "POST",
       headers: auth.headers,
-      body: JSON.stringify(patient),
+      body: JSON.stringify(patientData),
     });
     console.log(response);
     if (!response.ok) {
@@ -689,7 +701,6 @@ export const addDevice = async (device: {
   }
 };
 
-
 export const fetchPatientTreshold = async (
   navigate: ReturnType<typeof useNavigate>,
   patient_id: string | null = null
@@ -705,7 +716,7 @@ export const fetchPatientTreshold = async (
       headers: auth.headers,
     });
 
-    if (!response.ok) {      
+    if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
 
@@ -715,7 +726,6 @@ export const fetchPatientTreshold = async (
     throw error;
   }
 };
-
 
 export const updatePatientThreshold = async (
   navigate: ReturnType<typeof useNavigate>,
@@ -734,7 +744,7 @@ export const updatePatientThreshold = async (
 
     if (!auth) return;
     const cleanedThresholdData = Object.fromEntries(
-      Object.entries(thresholdData).filter(([ value]) => value !== undefined)
+      Object.entries(thresholdData).filter(([value]) => value !== undefined)
     );
 
     const response = await fetch(`${UPDATE_PATIENT_TRESHOLD}/${patient_id}`, {
@@ -756,8 +766,7 @@ export const updatePatientThreshold = async (
   }
 };
 
-
-export const fetchNewHealthData= async (
+export const fetchNewHealthData = async (
   navigate: ReturnType<typeof useNavigate>,
   device_id: string
 ) => {
@@ -772,7 +781,7 @@ export const fetchNewHealthData= async (
       headers: auth.headers,
     });
 
-    if (!response.ok) {      
+    if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
 
@@ -782,7 +791,6 @@ export const fetchNewHealthData= async (
     throw error;
   }
 };
-
 
 export const fetchPatient_BY_ID = async (
   navigate: ReturnType<typeof useNavigate>,
@@ -808,7 +816,7 @@ export const fetchPatient_BY_ID = async (
     console.error("Failed to fetch patients:", error);
     throw error;
   }
-}
+};
 
 export const fetchNewNotifications = async (
   navigate: ReturnType<typeof useNavigate>
@@ -836,7 +844,7 @@ export const fetchNewNotifications = async (
     console.error("Failed to fetch notifications:", error);
     throw error;
   }
-}
+};
 
 export const fetchCase = async (
   navigate: ReturnType<typeof useNavigate>,
@@ -856,17 +864,17 @@ export const fetchCase = async (
     if (!response.ok) {
       const errorData = await response.json();
       if (errorData.detail === "Not Found") {
-        return []; 
+        return [];
       }
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch notifications:", error);
     throw error;
   }
-}
+};
 
 export const postCase = async (
   navigate: ReturnType<typeof useNavigate>,
@@ -889,7 +897,9 @@ export const postCase = async (
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Error: ${response.status} - ${response.statusText} - ${errorText}`);
+      throw new Error(
+        `Error: ${response.status} - ${response.statusText} - ${errorText}`
+      );
     }
 
     return await response.json();
@@ -913,13 +923,13 @@ export const ContactProff = async (
       headers: auth.headers,
     });
 
-    if (!response.ok) {      
+    if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch notifications:", error);
     throw error;
   }
-}
+};
