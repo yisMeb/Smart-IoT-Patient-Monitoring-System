@@ -4,9 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { sendEmailVerification, signInWithCustomToken, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../lib/firebaseConfig";
 import {
-  /* getIdTokenFromCookies,
-  getRoleFromCookies,
-  isTokenExpired, */
   setIdTokenCookie,
 } from "../../lib/cookieUtils";
 import { useUserRole } from "../../context/UserRoleContext";
@@ -30,56 +27,6 @@ export default function Login() {
   const [isLocked, setIsLocked] = useState(false);
 
   const navigate = useNavigate();
-
-  /* useEffect(() => {
-    const handleAuthState = async () => {
-      const role = getRoleFromCookies();
-      const idToken = getIdTokenFromCookies();
-      if (!role || !idToken || isTokenExpired(idToken)) {
-        auth.signOut();
-        return;
-      }
-      const unsubscribe = auth.onAuthStateChanged(async (user) => {
-        if (user) {
-          setIsLoading(true);
-          try {
-            const response = await fetch(
-              `${import.meta.env.VITE_API_GET_USER_DATA}/${user.email}`,
-              {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${idToken}`,
-                },
-              }
-            );
-            if (!response.ok) {
-              console.log(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            const user_role = data.user_role;
-
-            if (user_role === "institution") {
-              navigate("/institutes/h-provider");
-            } else if (user_role === "professional") {
-              navigate("/professionals/dashboard");
-            } else if (user_role === "patient") {
-              navigate("/patients/dashboard");
-            }
-          } catch (error) {
-            console.error("Error fetching user data: try logging in", error);
-          } finally {
-            setIsLoading(false);
-          }
-        }
-      });
-
-      return () => unsubscribe();
-    };
-
-    handleAuthState();
-  }, [navigate]);
- */
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -144,7 +91,7 @@ export default function Login() {
         if (!response.ok) {
           setIsLoading(false);
           const data = await response.json();
-          setErrorMessage(data.message || "Failed to log in. Please try again.");
+          handleLockMessage(data.detail);
           return;
         }
         
@@ -183,21 +130,17 @@ export default function Login() {
           setErrorMessage("User is not signed in.");
         }
       } catch (firebaseError) {
-        // Handle Firebase authentication errors
         if (firebaseError instanceof FirebaseError) {
-          // Track the failed attempt in your backend immediately
           const failedAttemptResponse = await fetch(`${import.meta.env.VITE_API_TRACK_LOCK}/${email}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
           });
           
-          // Check if account is now locked after this failed attempt
           if (!failedAttemptResponse.ok) {
             const data = await failedAttemptResponse.json();
             handleLockMessage(data.detail);
           }
           
-          // Handle specific Firebase error messages
           if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/wrong-password') {
             setErrorMessage("Incorrect email or password.");
           } else if (firebaseError.code === 'auth/invalid-email') {
@@ -227,12 +170,10 @@ export default function Login() {
   const handleLockMessage = (detail: string) => {
     const lockTimeMatch = detail.match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/);
     if (lockTimeMatch) {
-      // Convert the lock time string to a date object
       const lockTimeStr = lockTimeMatch[0];
-      const lockTime = new Date(`${lockTimeStr} UTC`); // Assuming server returns UTC time
+      const lockTime = new Date(`${lockTimeStr} UTC`);
       const currentTime = new Date();
       
-      // Calculate time difference
       const timeLeftMs = lockTime.getTime() - currentTime.getTime();
       
       if (timeLeftMs > 0) {
@@ -244,7 +185,6 @@ export default function Login() {
         setWarningMessage("Your account was locked but should be available now. Please try again.");
       }
     } else {
-      // Fallback message if no timestamp found
       setWarningMessage(detail || "Too many login attempts: your account is locked. Please try again soon.");
     }
   };
