@@ -79,7 +79,7 @@ export const StatusCharts = () => {
         const patientStatusBreakdown = patients.reduce(
           (acc: Record<string, number>, patient: { status: string }) => {
             if (patient.status === "active") acc.active += 1;
-            else if (patient.status === "inactive") acc.inactive += 1;
+            else if (patient.status === "inactive" || patient.status === "") acc.inactive += 1;
             else if (patient.status === "inProgress") acc.inProgress += 1;
             return acc;
           },
@@ -120,7 +120,7 @@ export const StatusCharts = () => {
 
   const chartData = (data: StatusBreakdown) => [
     { name: "Active", value: data.active, color: "#00A3FF" },
-    { name: "Inactive", value: data.inactive, color: "#50CD89" },
+    { name: "Inactive", value: data.inactive, color: "#FFC0CB" },
     { name: "In Progress", value: data.inProgress, color: "#E4E6EF" },
   ];
   const chartDataDevice = (data: StatusBreakdownDevice) => [
