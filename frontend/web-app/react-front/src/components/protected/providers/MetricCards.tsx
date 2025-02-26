@@ -97,7 +97,7 @@ export const MetricCards = () => {
         const unresolvedAlerts_count = Array.isArray(unresolvedAlerts) ? unresolvedAlerts.length : 10;
 
         const resolvedAlert_change = resolvedAlerts_count > 0 ? ((resolvedAlerts_count - 1) / 1) * 100 : 0;
-        const unresolvedAlert_change = unresolvedAlerts_count > 0 ? ((unresolvedAlerts_count - 1) / 1) * 100 : 0;
+        const unresolvedAlert_change = unresolvedAlerts_count > 0 ? ((unresolvedAlerts_count - 100) / 300) * 100 : 0;
 
 
         setMetrics([
