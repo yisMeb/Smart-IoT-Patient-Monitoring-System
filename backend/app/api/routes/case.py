@@ -1,9 +1,6 @@
 
-
 from fastapi import APIRouter, Depends, HTTPException
-
 from app.api.dependacies import get_current_user
-from app.api.services.alert_services import fetch_notifications_by_id, fetch_notifications_by_proffesional
 from app.config.database import get_db_conn
 from app.api.models.case_model import CaseData
 from app.api.services.case_services import add_case_history, get_case_history
@@ -11,12 +8,10 @@ from app.api.services.case_services import add_case_history, get_case_history
 
 router = APIRouter()
 
-@router.post("/remark/patient")
-async def addcase(data: CaseData,db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
-    # Get id from token and pass that
+@router.post("/remark/patient/{patient_id}/{professional_id}/{remark}")
+async def addcase(patient_id:str, professional_id:str, remark:str, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
     if current_user["user_role"] == "professional":
-        print(data)
-        return await add_case_history (data, db)
+        return await add_case_history(patient_id, professional_id, remark, db)
     else:
         raise HTTPException(status_code=401, detail="Only professionals can access this feature.")
 

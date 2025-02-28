@@ -5,12 +5,24 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Phone, Mail, User, Cpu, Heart, Wind, Thermometer } from "lucide-react"
-import { fetchCase, fetchPatientTreshold, updatePatientThreshold } from "../../../service/api"
+import { Phone, Mail, User, Cpu, Heart, Wind, Thermometer, Loader2, RefreshCcw } from "lucide-react"
+import { fetchCase, fetchPatientTreshold, updatePatientThreshold, postCase } from "../../../service/api"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Loader } from "lucide-react"
+import { getRoleIDFromCookie } from "@/lib/cookieUtils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface Patient {
   patient_id: string
@@ -48,42 +60,52 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
     Oxygene: false,
     Temperature: false,
   })
+  const [professional_ID, setProfessional_ID] = useState("")
+
+  // New state for case dialog
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [remark, setRemark] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const navigate = useNavigate()
 
   useEffect(() => {
-    const loadCaseData = async () => {
-      setIsTimelineLoading(true)
-      try {
-        const cases = await fetchCase(navigate, patient.patient_id)
-        if (cases && cases.length > 0) {
-          const formattedData = cases.map((c: { timestamp: string; remark: string }) => ({
-            date: new Date(c.timestamp).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            }),
-            notes: c.remark,
-          }))
-          setTimelineData(formattedData)
-        } else {
-          setTimelineData([])
-        }
-      } catch (error) {
-        console.error("Error fetching case data:", error)
-      } finally {
-        setIsTimelineLoading(false)
-      }
+    const p_id = getRoleIDFromCookie()
+    if (p_id) {
+      setProfessional_ID(p_id)
     }
     loadCaseData()
-  }, [navigate, patient.patient_id])
+  }, []) // Removed patient.patient_id from dependencies
+
+  const loadCaseData = async () => {
+    setIsTimelineLoading(true)
+    try {
+      const cases = await fetchCase(navigate, patient.patient_id)
+      if (cases && cases.length > 0) {
+        const formattedData = cases.map((c: { timestamp: string; remark: string }) => ({
+          date: new Date(c.timestamp).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }),
+          notes: c.remark,
+        }))
+        setTimelineData(formattedData)
+      } else {
+        setTimelineData([])
+      }
+    } catch (error) {
+      console.error("Error fetching case data:", error)
+    } finally {
+      setIsTimelineLoading(false)
+    }
+  }
 
   useEffect(() => {
     const loadThresholds = async () => {
       setIsThresholdsLoading(true)
       setIsRefreshing(true)
       try {
-
         const data = await fetchPatientTreshold(navigate, patient.patient_id)
         setThresholds(data)
       } catch (error) {
@@ -94,47 +116,49 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
       }
     }
     loadThresholds()
-  }, [navigate, patient.patient_id])
+  }, [patient.patient_id, navigate])
 
   const handleSaveThreshold = async (key: string) => {
-    setLoadingThresholds((prev) => ({ ...prev, [key]: true }));
-  
+    setLoadingThresholds((prev) => ({ ...prev, [key]: true }))
+
     try {
-      const thresholdData: { [key: string]: number | undefined } = {};
-  
+      const thresholdData: { [key: string]: number | undefined } = {}
+
       if (key === "Hearthrate" && thresholdInputs["Hearthrate"]) {
-        thresholdData.heartrate_threshold_lower = Number.parseFloat(thresholdInputs["Hearthrate"].lower);
-        thresholdData.heartrate_threshold = Number.parseFloat(thresholdInputs["Hearthrate"].upper);
+        thresholdData.heartrate_threshold_lower = Number.parseFloat(thresholdInputs["Hearthrate"].lower)
+        thresholdData.heartrate_threshold = Number.parseFloat(thresholdInputs["Hearthrate"].upper)
       }
       if (key === "Oxygene" && thresholdInputs["Oxygene"]) {
-        thresholdData.oxygen_threshold_lower = Number.parseFloat(thresholdInputs["Oxygene"].lower);
-        thresholdData.oxygen_threshold = Number.parseFloat(thresholdInputs["Oxygene"].upper);
+        thresholdData.oxygen_threshold_lower = Number.parseFloat(thresholdInputs["Oxygene"].lower)
+        thresholdData.oxygen_threshold = Number.parseFloat(thresholdInputs["Oxygene"].upper)
       }
       if (key === "Temperature" && thresholdInputs["Temperature"]) {
-        thresholdData.temperature_threshold_lower = Number.parseFloat(thresholdInputs["Temperature"].lower);
-        thresholdData.temperature_threshold = Number.parseFloat(thresholdInputs["Temperature"].upper);
+        thresholdData.temperature_threshold_lower = Number.parseFloat(thresholdInputs["Temperature"].lower)
+        thresholdData.temperature_threshold = Number.parseFloat(thresholdInputs["Temperature"].upper)
       }
-  
-      await updatePatientThreshold(navigate, patient.patient_id, thresholdData);
 
-      setEditingThreshold(null);
+      await updatePatientThreshold(navigate, patient.patient_id, thresholdData)
+
+      setEditingThreshold(null)
     } catch (error) {
-      console.error("Error updating threshold:", error);
+      console.error("Error updating threshold:", error)
     } finally {
-      const updatedThresholds = await fetchPatientTreshold(navigate, patient.patient_id);
-      setThresholds(updatedThresholds);
-      window.location.reload()
-      setThresholdInputs((prev) => ({
-        ...prev,
-        [key]: { 
-          lower: updatedThresholds[key]?.split("-")[0]?.trim() || "",
-          upper: updatedThresholds[key]?.split("-")[1]?.trim() || ""
-        }
-      }));
-      setLoadingThresholds((prev) => ({ ...prev, [key]: false }));
+      try {
+        const updatedThresholds = await fetchPatientTreshold(navigate, patient.patient_id)
+        setThresholds(updatedThresholds)
+        setThresholdInputs((prev) => ({
+          ...prev,
+          [key]: {
+            lower: updatedThresholds[key]?.split("-")[0]?.trim() || "",
+            upper: updatedThresholds[key]?.split("-")[1]?.trim() || "",
+          },
+        }))
+      } catch (error) {
+        console.error("Error fetching updated thresholds:", error)
+      }
+      setLoadingThresholds((prev) => ({ ...prev, [key]: false }))
     }
-  };
-  
+  }
 
   const handleEditClick = (key: string, value: string) => {
     const [lower, upper] = value.split("-").map((v) => v.trim())
@@ -144,12 +168,33 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
       [key]: { lower: lower || "", upper: upper || "" },
     }))
   }
+
   const handleInputChange = (key: string, field: "lower" | "upper", value: string) => {
     setThresholdInputs((prev) => ({
       ...prev,
       [key]: { ...prev[key], [field]: value },
     }))
   }
+
+  // New function to handle case submission
+  const handleSubmitCase = async () => {
+    if (!remark.trim()) return
+
+    setIsSubmitting(true)
+    try {
+      await postCase(navigate, patient.patient_id, remark, professional_ID)
+      // Refresh the timeline data after successful submission
+      await loadCaseData()
+      // Reset form and close dialog
+      setRemark("")
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error submitting case:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="w-full max-w-2xl mx-auto p-4">
       <div className="space-y-6">
@@ -182,10 +227,63 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
           </CardContent>
         </Card>
 
-        {/* Timeline  */}
+        {/* Timeline with Add Case Dialog */}
         <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold">Timeline</h3>
+          <CardHeader className="flex flex-row justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Timeline</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsTimelineLoading(true)
+                  loadCaseData().finally(() => setIsTimelineLoading(false))
+                }}
+                disabled={isTimelineLoading}
+                className="h-8 w-8"
+              >
+                <RefreshCcw className={`h-4 w-4 ${isTimelineLoading ? "animate-spin" : ""}`} />
+                <span className="sr-only">Refresh timeline</span>
+              </Button>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Add Case</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add New Case</DialogTitle>
+                  <DialogDescription>Enter a remark for this patient's case.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="remark">Remark</Label>
+                    <Input
+                      id="remark"
+                      placeholder="Enter case details..."
+                      value={remark}
+                      onChange={(e) => setRemark(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <DialogFooter className="sm:justify-end">
+                  <Button type="button" variant="secondary" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={handleSubmitCase} disabled={isSubmitting || !remark.trim()}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Case"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[300px] pr-4">
@@ -220,7 +318,29 @@ const Case: React.FC<CaseProps> = ({ patient }) => {
         {/* Thresholds */}
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-semibold">Threshold</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Threshold</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={async () => {
+                  setIsThresholdsLoading(true)
+                  try {
+                    const data = await fetchPatientTreshold(navigate, patient.patient_id)
+                    setThresholds(data)
+                  } catch (error) {
+                    console.error("Error refreshing thresholds:", error)
+                  } finally {
+                    setIsThresholdsLoading(false)
+                  }
+                }}
+                disabled={isThresholdsLoading || isRefreshing}
+                className="h-8 w-8"
+              >
+                <RefreshCcw className={`h-4 w-4 ${isThresholdsLoading || isRefreshing ? "animate-spin" : ""}`} />
+                <span className="sr-only">Refresh thresholds</span>
+              </Button>
+            </div>
             <p className="text-sm text-muted-foreground">Individual Threshold</p>
           </CardHeader>
           <CardContent className="space-y-4">

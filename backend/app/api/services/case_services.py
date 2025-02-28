@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from app.api.models.case_model import CaseData 
 
-async def add_case_history(data: CaseData , db: asyncpg.Connection):
+async def add_case_history(patient_id:str, professional_id:str, remark:str, db: asyncpg.Connection):
     try:
         query ='''
            INSERT INTO public."case"(
@@ -16,9 +16,9 @@ async def add_case_history(data: CaseData , db: asyncpg.Connection):
         '''
         device_data = await db.fetchrow(
             query,
-            data.patient_id,
-            data.professional_id,
-            data.remark
+            patient_id,
+            professional_id,
+            remark
         )
         if not device_data:
            raise HTTPException(status_code=500, detail="Failed to create case data")

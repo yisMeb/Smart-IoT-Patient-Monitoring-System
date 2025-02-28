@@ -100,12 +100,6 @@ interface Device {
   is_assigned: boolean;
 }
 
-interface Case {
-  patient_id: string;
-  remark: string;
-  professional_id: string;
-}
-
 const checkAuthAndGetHeaders = (navigate: ReturnType<typeof useNavigate>) => {
   const token = getIdTokenFromCookies();
   const role = getRoleFromCookies();
@@ -1040,21 +1034,23 @@ export const fetchCase = async (
 
 export const postCase = async (
   navigate: ReturnType<typeof useNavigate>,
-  caseData: Case
-): Promise<Case> => {
+  patient_id: string | null = null,
+  remark: string | null = null,
+  professional_id: string | null = null,
+)=> {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
+
     if (!auth) {
       throw new Error("Unauthorized: No authentication headers found.");
     }
-
-    const response = await fetch(POST_CASE, {
+    
+    const response = await fetch(`${POST_CASE}/${patient_id}/${professional_id}/${remark}`, {
       method: "POST",
       headers: {
         ...auth.headers,
         "Content-Type": "application/json",
-      },
-      body: JSON.stringify(caseData),
+      }
     });
 
     if (!response.ok) {

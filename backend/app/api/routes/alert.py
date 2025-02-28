@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.api.dependacies import get_current_user
-from app.api.services.alert_services import All_resolved_alerts, All_unresolved_alerts, all_proff_alert, fetch_notifications_by_id, fetch_notifications_by_proffesional, fetch_resolved_alerts, fetch_unresolved_alerts
+from app.api.services.alert_services import All_resolved_alerts, All_unresolved_alerts, all_proff_alert, fetch_notifications_by_id, fetch_notifications_by_proffesional, fetch_resolved_alerts, fetch_unresolved_alerts, toggle_resolved
 from app.config.database import get_db_conn
 
 
@@ -55,3 +55,10 @@ async def all_proff_alerts(id: str, db = Depends(get_db_conn), current_user: dic
         return await all_proff_alert(id, db)
     else:
         raise HTTPException(status_code=401, detail="Only professionals users can access this feature.")
+    
+@router.post("/toggle/resolve/{alert_id}")
+async def toggle_resolve(alert_id: str, db = Depends(get_db_conn), current_user: dict = Depends(get_current_user)):
+    if current_user["user_role"] == "professional":
+        return await toggle_resolved(db, alert_id)
+    else:
+        raise HTTPException(status_code=401, detail="Only institution can access this feature.")
