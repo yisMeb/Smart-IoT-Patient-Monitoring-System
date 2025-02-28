@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { addProfessional, updateProfessional } from "@/service/api";
+import {
+  addProfessional,
+  updateProfessional,
+  deleteProfessional,
+} from "@/service/api";
 import ProfessionalTable from "../../components/protected/providers/ManageProfessionals/ProfessionalTable";
 import ProfessionalModal from "../../components/protected/providers/ManageProfessionals/ProfessionalModal";
 import ErrorModal from "../../components/protected/providers/ManageProfessionals/ErrorModal";
@@ -88,6 +92,25 @@ const ManageProfessionals: React.FC = () => {
     }
   };
 
+  const handleDeleteProfessional = async (professionalId: string) => {
+    const roleSpecificId = getRoleIDFromCookie(); // Fetch institution_id
+    if (!roleSpecificId) {
+      setError("Institution ID is missing. Please try again.");
+      return;
+    }
+
+    try {
+      await deleteProfessional(navigate, professionalId, roleSpecificId);
+      setProfessionals(
+        professionals.filter((p) => p.professional_id !== professionalId)
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete professional"
+      );
+    }
+  };
+
   if (loading) return <Loading />;
 
   return (
@@ -122,6 +145,7 @@ const ManageProfessionals: React.FC = () => {
           setSelectedProfessional(professional);
           setIsEditModalOpen(true);
         }}
+        onDelete={handleDeleteProfessional}
       />
 
       {isModalOpen && (

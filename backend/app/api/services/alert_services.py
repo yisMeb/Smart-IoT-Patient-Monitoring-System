@@ -49,6 +49,7 @@ async def fetch_notifications_by_proffesional(id: str, db: asyncpg.Connection):
                 "message": alert['message'],
                 "name": patient_data['name'],
                 "contact_number": patient_data['contact_number'],
+                "is_resolved": alert['is_resolved'],
                 "timestamp": alert['timestamp']
             }
             final_data.append(final_alert_data)
@@ -154,6 +155,23 @@ async def all_proff_alert(id: str, db: asyncpg.Connection):
             return {"data": [], "count": 0}
         
         return  {"data": data, "count": len(data)}
+
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {e}")
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+async def toggle_resolved(db: asyncpg.Connection, alert_id: str):
+    try:
+        query = '''
+            UPDATE public.alert
+            SET is_resolved = NOT is_resolved
+            WHERE id = $1
+            RETURNING is_resolved;
+        '''
+        result = await db.fetchval(query, alert_id)
+        
+        return {"message": "Alert resolved status updated successfully", "is_resolved": result}
 
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")

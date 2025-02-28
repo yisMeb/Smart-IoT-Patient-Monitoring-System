@@ -1,14 +1,13 @@
-"use client"
-
 import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { fetchPatientAlertTable } from "../../../service/api" // Adjust the import path as needed
+import { fetchPatientAlertTable, toggle_alert_resolved } from "../../../service/api" // Adjust the import path as needed
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
 type Alert = {
   id: number
@@ -16,6 +15,7 @@ type Alert = {
   name: string
   contact_number: string
   timestamp: string
+  is_resolved: boolean
 }
 
 export const AlertTable = () => {
@@ -27,6 +27,7 @@ export const AlertTable = () => {
   const [pageSize, setPageSize] = useState(10)
   const [searchTerm, setSearchTerm] = useState("")
   const navigate = useNavigate()
+  const [togglingAlerts, setTogglingAlerts] = useState<Record<number, boolean>>({})
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -107,6 +108,7 @@ export const AlertTable = () => {
                     <TableHead className="w-[150px]">Name</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Alert</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -119,6 +121,33 @@ export const AlertTable = () => {
                         </TableCell>
                         <TableCell>{new Date(row.timestamp).toLocaleDateString()}</TableCell>
                         <TableCell>{row.message}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="relative">
+                              <Switch
+                                checked={row.is_resolved}
+                                onCheckedChange={async () => {
+                                  try {
+                                    setTogglingAlerts((prev) => ({ ...prev, [row.id]: true }))
+                                    await toggle_alert_resolved(navigate, row.id.toString())
+                                    await fetchData()
+                                  } catch (error) {
+                                    console.error("Failed to toggle alert:", error)
+                                  } finally {
+                                    setTogglingAlerts((prev) => ({ ...prev, [row.id]: false }))
+                                  }
+                                }}
+                                disabled={togglingAlerts[row.id]}
+                              />
+                              {togglingAlerts[row.id] && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                </div>
+                              )}
+                            </div>
+                            <span className="ml-2">{row.is_resolved ? "Resolved" : "Unresolved"}</span>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
@@ -190,3 +219,4 @@ export const AlertTable = () => {
     </Card>
   )
 }
+

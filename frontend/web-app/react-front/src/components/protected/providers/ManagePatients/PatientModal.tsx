@@ -89,6 +89,11 @@ const PatientModal: React.FC<PatientModalProps> = ({
     }
   };
 
+  // Get the device name for the assigned device (for display in edit mode)
+  const assignedDevice = devices.find(
+    (device) => device.deviceid === patient.device_id
+  );
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -209,28 +214,39 @@ const PatientModal: React.FC<PatientModalProps> = ({
             )}
           </div>
 
-          {/* Device Dropdown */}
+          {/* Device Field */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Assign Device
             </label>
-            <select
-              value={patient.device_id}
-              onChange={(e) => onChange("device_id", e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select a device</option>
-              {devices
-                .filter(
-                  (device) =>
-                    !device.is_assigned || device.deviceid === patient.device_id
-                )
-                .map((device) => (
-                  <option key={device.deviceid} value={device.deviceid}>
-                    {device.device_name}
-                  </option>
-                ))}
-            </select>
+            {isEdit ? (
+              // Display device name as plain text in edit mode
+              <div className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                {assignedDevice
+                  ? assignedDevice.device_name
+                  : "No device assigned"}
+              </div>
+            ) : (
+              // Allow device selection in add mode
+              <select
+                value={patient.device_id}
+                onChange={(e) => onChange("device_id", e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a device</option>
+                {devices
+                  .filter(
+                    (device) =>
+                      !device.is_assigned ||
+                      device.deviceid === patient.device_id
+                  )
+                  .map((device) => (
+                    <option key={device.deviceid} value={device.deviceid}>
+                      {device.device_name}
+                    </option>
+                  ))}
+              </select>
+            )}
             {errors.device_id && (
               <p className="text-red-500 text-xs mt-1">{errors.device_id}</p>
             )}
