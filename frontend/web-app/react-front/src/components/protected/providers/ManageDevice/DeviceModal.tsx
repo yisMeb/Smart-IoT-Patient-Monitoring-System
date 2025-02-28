@@ -48,13 +48,21 @@ const DeviceModal: React.FC<DeviceModalProps> = ({
             <label className="block text-sm font-medium text-gray-700">
               Device Name
             </label>
-            <input
-              type="text"
-              placeholder="Enter the device name"
-              value={device.device_name}
-              onChange={(e) => onChange("device_name", e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
+            {isEdit ? (
+              // Display device name as plain text in edit mode
+              <div className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                {device.device_name}
+              </div>
+            ) : (
+              // Allow editing device name in add mode
+              <input
+                type="text"
+                placeholder="Enter the device name"
+                value={device.device_name}
+                onChange={(e) => onChange("device_name", e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            )}
             {errors.device_name && (
               <p className="text-red-500 text-xs mt-1">{errors.device_name}</p>
             )}

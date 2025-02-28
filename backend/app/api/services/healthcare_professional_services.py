@@ -98,7 +98,7 @@ async def delete_healthcare_professionals(db: asyncpg.Connection, institution_id
     DELETE FROM public.healthcare_professionals
 	WHERE institution_id = $1 AND professional_id = $2
     """
-    professionals = await db.fetch(query ,institution_id ,professional_id )
+    professionals = await db.execute(query ,institution_id ,professional_id )
     return professionals 
 
 

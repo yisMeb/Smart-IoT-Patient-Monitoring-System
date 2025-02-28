@@ -234,15 +234,51 @@ async def update_patient_service(patient_id: str, patient: PatientUpdate, db: as
     except asyncpg.PostgresError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
+
 async def delete_patient_service(patient_id: str, db: asyncpg.Connection):
-    query = """
-    DELETE FROM patients
-    WHERE patient_id = $1
-    RETURNING patient_id
-    """
-    result = await db.fetchrow(query, patient_id)
-   
-    return result
+    try:
+        # Fetch the device_id associated with the patient
+        fetch_device_query = """
+        SELECT device_id
+        FROM patients
+        WHERE patient_id = $1
+        """
+        device_record = await db.fetchrow(fetch_device_query, patient_id)
+
+        if device_record and device_record["device_id"]:
+            # Release the device by setting is_assigned to false
+            release_device_query = """
+            UPDATE public."device"
+            SET is_assigned = false
+            WHERE deviceid = $1
+            """
+            await db.execute(release_device_query, device_record["device_id"])
+
+        # Delete the dependent records in the `users` table
+        delete_users_query = """
+        DELETE FROM users
+        WHERE patient_id = $1
+        """
+        await db.execute(delete_users_query, patient_id)
+
+        # Then, delete the patient
+        delete_patient_query = """
+        DELETE FROM patients
+        WHERE patient_id = $1
+        RETURNING patient_id
+        """
+        result = await db.fetchrow(delete_patient_query, patient_id)
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Patient not found")
+
+        return result
+
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+    
 
 async def patients_for_professional(professional_id: str, db: asyncpg.Connection):
     query = """

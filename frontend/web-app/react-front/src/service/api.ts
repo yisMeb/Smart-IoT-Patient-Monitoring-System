@@ -50,6 +50,11 @@ const GET_CASE = import.meta.env.VITE_API_CASE as string;
 const POST_CASE = import.meta.env.VITE_API_CASE_POST as string;
 const CONTACT_PROFESSIONAL = import.meta.env
   .VITE_API_CONTACT_PROFESSIONAL as string;
+const PATIENT_DELETE = import.meta.env.VITE_API_DELETE_PATIENT as string;
+const PROFESSIONAL_DELETE = import.meta.env
+  .VITE_API_DELETE_PROFESSIONAL as string;
+const PATIENT_ALERT_TOGGLE = import.meta.env
+  .VITE_API_PATIENT_ALERT_TOGGLE as string;
 
 const token = getIdTokenFromCookies();
 
@@ -133,7 +138,10 @@ export const fetchAllPatient = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -200,7 +208,32 @@ export const AllUnResolvedAlert = async (
     return [];
   }
 };
+export const toggle_alert_resolved = async (
+  navigate: ReturnType<typeof useNavigate>,
+  alert_id: string
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+    console.log("Alert ID:  ", alert_id);
+    const response = await fetch(`${PATIENT_ALERT_TOGGLE}/${alert_id}`, {
+      method: "POST",
+      headers: auth.headers,
+    });
 
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to toggle alert resolved:", error);
+    throw error;
+  }
+};
 export const fetchAssingnedPatients = async (
   navigate: ReturnType<typeof useNavigate>
 ) => {
@@ -215,7 +248,10 @@ export const fetchAssingnedPatients = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -239,7 +275,10 @@ export const fetchProfessionalByID = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -263,7 +302,10 @@ export const fetchInstitutionByID = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -286,7 +328,10 @@ export const fetchAllProfessionals = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -309,7 +354,10 @@ export const fetchAllDevices = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -333,7 +381,10 @@ export const fetchPatientAlert = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -357,7 +408,10 @@ export const fetchAllAlertProfess = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -381,7 +435,10 @@ export const fetchResolvedAlertProfessional = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     const data = await response.json();
@@ -406,7 +463,10 @@ export const fetchUnesolvedAlertProfessional = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -430,7 +490,10 @@ export const fetchPatientAlertTable = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     const data = await response.json();
@@ -470,7 +533,10 @@ export const fetchPatientAssignmentHistory = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     const data = await response.json();
@@ -497,7 +563,10 @@ export const updateProfessional = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -523,7 +592,10 @@ export const updateProviders = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -554,7 +626,10 @@ export const addProfessional = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
     const data = await response.json();
     //send an email to the professional
@@ -562,6 +637,63 @@ export const addProfessional = async (
     return data;
   } catch (error) {
     console.error("Failed to add professional:", error);
+    throw error;
+  }
+};
+export const deleteProfessional = async (
+  navigate: ReturnType<typeof useNavigate>,
+  professionalId: string,
+  institutionId: string
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return [];
+
+    const url = `${PROFESSIONAL_DELETE}/${professionalId}/${institutionId}`;
+    console.log("Deleting professional with URL:", url);
+
+    const response = await fetch(url, {
+      method: "DELETE", // Use DELETE method
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to delete professional:", error);
+    throw error;
+  }
+};
+
+export const deletePatient = async (
+  navigate: ReturnType<typeof useNavigate>,
+  patientId: string
+) => {
+  try {
+    const auth = checkAuthAndGetHeaders(navigate);
+    if (!auth) return;
+
+    const response = await fetch(`${PATIENT_DELETE}/${patientId}`, {
+      method: "DELETE",
+      headers: auth.headers,
+    });
+
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to delete patient:", error);
     throw error;
   }
 };
@@ -582,7 +714,10 @@ export const updatePatient = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -633,7 +768,10 @@ export const addPatient = async (
     });
     console.log(response);
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
     const data = await response.json();
 
@@ -665,7 +803,10 @@ export const updateDevice = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -691,7 +832,10 @@ export const addDevice = async (device: {
     });
     console.log(body);
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -717,7 +861,10 @@ export const fetchPatientTreshold = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -756,7 +903,10 @@ export const updatePatientThreshold = async (
       body: JSON.stringify(cleanedThresholdData),
     });
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -782,7 +932,10 @@ export const fetchNewHealthData = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -808,7 +961,10 @@ export const fetchPatient_BY_ID = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -833,7 +989,10 @@ export const fetchNewNotifications = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     const notifications = await response.json();
@@ -866,7 +1025,10 @@ export const fetchCase = async (
       if (errorData.detail === "Not Found") {
         return [];
       }
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -896,10 +1058,10 @@ export const postCase = async (
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();
@@ -924,7 +1086,10 @@ export const ContactProff = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      const errorResponse = await response.json();
+      const errorDetails =
+        errorResponse.detail || "No additional error details provided";
+      throw new Error(`Error: ${response.status} - ${errorDetails}`);
     }
 
     return await response.json();

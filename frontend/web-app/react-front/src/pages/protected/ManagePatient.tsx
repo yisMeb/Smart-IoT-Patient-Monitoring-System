@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { addPatient, updatePatient } from "@/service/api";
+import { addPatient, updatePatient, deletePatient } from "@/service/api"; // Import deletePatient
 import PatientTable from "../../components/protected/providers/ManagePatients/PatientTable";
 import PatientModal from "../../components/protected/providers/ManagePatients/PatientModal";
 import ErrorModal from "../../components/protected/providers/ManagePatients/ErrorModal";
@@ -9,6 +9,7 @@ import Loading from "../../components/ui/loading";
 import { Navigation } from "../../components/protected/providers/Navigations";
 import { getRoleIDFromCookie } from "../../lib/cookieUtils";
 import { useNavigate } from "react-router-dom";
+
 interface Patient {
   patient_id: string;
   name: string;
@@ -40,11 +41,12 @@ const ManagePatients: React.FC = () => {
     address: "",
     contact_number: "",
     email: "",
-    status: "",
+    status: "active",
     professional_id: "",
     device_id: "",
   });
   const navigate = useNavigate();
+
   const handleAddPatient = async () => {
     const roleSpecificId = getRoleIDFromCookie();
     if (!roleSpecificId) {
@@ -65,7 +67,7 @@ const ManagePatients: React.FC = () => {
         address: "",
         contact_number: "",
         email: "",
-        status: "",
+        status: "active",
         professional_id: "",
         device_id: "",
       });
@@ -97,6 +99,18 @@ const ManagePatients: React.FC = () => {
     }
   };
 
+  // Define the onDelete function
+  const handleDeletePatient = async (patientId: string) => {
+    try {
+      await deletePatient(navigate, patientId); // Call the deletePatient API
+      setPatients(
+        patients.filter((patient) => patient.patient_id !== patientId)
+      ); // Update the patients state
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete patient");
+    }
+  };
+
   if (loading) return <Loading />;
 
   return (
@@ -125,6 +139,7 @@ const ManagePatients: React.FC = () => {
         </div>
       </div>
 
+      {/* Pass the onDelete prop to PatientTable */}
       <PatientTable
         patients={patients}
         professionals={professionals}
@@ -132,6 +147,7 @@ const ManagePatients: React.FC = () => {
           setSelectedPatient(patient);
           setIsEditModalOpen(true);
         }}
+        onDelete={handleDeletePatient} // Pass the onDelete function
       />
 
       {isModalOpen && (
