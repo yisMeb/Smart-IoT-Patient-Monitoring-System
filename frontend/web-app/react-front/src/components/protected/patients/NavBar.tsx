@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, UserRoundPen } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,9 +44,6 @@ export const NavBar = () => {
         <DropdownMenuContent className="text-center">
           <DropdownMenuLabel>Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate("/patients/profile")}>
-            <UserRoundPen /> Profile
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut /> Logout
           </DropdownMenuItem>
