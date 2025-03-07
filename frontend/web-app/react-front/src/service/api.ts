@@ -634,6 +634,7 @@ export const addProfessional = async (
     throw error;
   }
 };
+
 export const deleteProfessional = async (
   navigate: ReturnType<typeof useNavigate>,
   professionalId: string,
@@ -643,6 +644,7 @@ export const deleteProfessional = async (
     const auth = checkAuthAndGetHeaders(navigate);
     if (!auth) return [];
 
+    // Construct URL with path parameters instead of query parameters
     const url = `${PROFESSIONAL_DELETE}/${professionalId}/${institutionId}`;
     console.log("Deleting professional with URL:", url);
 
@@ -1036,22 +1038,25 @@ export const postCase = async (
   navigate: ReturnType<typeof useNavigate>,
   patient_id: string | null = null,
   remark: string | null = null,
-  professional_id: string | null = null,
-)=> {
+  professional_id: string | null = null
+) => {
   try {
     const auth = checkAuthAndGetHeaders(navigate);
 
     if (!auth) {
       throw new Error("Unauthorized: No authentication headers found.");
     }
-    
-    const response = await fetch(`${POST_CASE}/${patient_id}/${professional_id}/${remark}`, {
-      method: "POST",
-      headers: {
-        ...auth.headers,
-        "Content-Type": "application/json",
+
+    const response = await fetch(
+      `${POST_CASE}/${patient_id}/${professional_id}/${remark}`,
+      {
+        method: "POST",
+        headers: {
+          ...auth.headers,
+          "Content-Type": "application/json",
+        },
       }
-    });
+    );
 
     if (!response.ok) {
       const errorResponse = await response.json();
