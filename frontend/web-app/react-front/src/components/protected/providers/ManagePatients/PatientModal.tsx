@@ -110,9 +110,15 @@ const PatientModal: React.FC<PatientModalProps> = ({
               type="text"
               placeholder="Enter the name"
               value={patient.name}
-              onChange={(e) => onChange("name", e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^[A-Za-z\s]*$/.test(value)) {
+                  onChange("name", value);
+                }
+              }}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+
             {errors.name && (
               <p className="text-red-500 text-xs mt-1">{errors.name}</p>
             )}
@@ -160,9 +166,16 @@ const PatientModal: React.FC<PatientModalProps> = ({
               type="text"
               placeholder="Enter the contact number"
               value={patient.contact_number}
-              onChange={(e) => onChange("contact_number", e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d*$/.test(value)) {
+                  // Only allow digits (0-9)
+                  onChange("contact_number", value);
+                }
+              }}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+
             {errors.contact_number && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.contact_number}

@@ -48,23 +48,18 @@ async def fetch_professionals(professional_id:str ,current_user: dict = Depends(
         raise HTTPException(status_code=401, detail="Only institution can access this feature")
 
     
-@router.delete("/delete")
+@router.delete("/delete/{professional_id}/{institution_id}")
 async def delete_professionals(
-    professional_id : str,
-    institution_id : str,
+    professional_id: str,
+    institution_id: str,
     current_user: dict = Depends(get_current_user),
     db: asyncpg.Connection = Depends(get_db_conn),    
 ):
     # Ensure the current user has the "institution" role
-    if current_user["user_role"] == "institution":
-        if not institution_id:
-            raise HTTPException(status_code=400, detail="Institution id is required.")
-        
-       # Fetch professionals belonging to the current institution
-        return await delete_healthcare_professionals(db , institution_id, professional_id  )
-    else:
+    if current_user["user_role"] != "institution":
         raise HTTPException(status_code=401, detail="Only institution users can delete")
 
+    return await delete_healthcare_professionals(db, institution_id, professional_id)
 
 
 @router.put("/update/{professional_id}")
