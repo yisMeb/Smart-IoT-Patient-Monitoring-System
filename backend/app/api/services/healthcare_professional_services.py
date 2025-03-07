@@ -93,14 +93,32 @@ async def assigned_patients(db: asyncpg.Connection, professional_id: str):
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-async def delete_healthcare_professionals(db: asyncpg.Connection, institution_id :str, professional_id:str  ):
-    query = """
-    DELETE FROM public.healthcare_professionals
-	WHERE institution_id = $1 AND professional_id = $2
-    """
-    professionals = await db.execute(query ,institution_id ,professional_id )
-    return professionals 
+async def delete_healthcare_professionals(db: asyncpg.Connection, institution_id: str, professional_id: str):
+    try:
+        # Delete dependent records in the `users` table first
+        delete_users_query = """
+        DELETE FROM users
+        WHERE professional_id = $1
+        """
+        await db.execute(delete_users_query, professional_id)
 
+        # Then, delete the professional
+        delete_professional_query = """
+        DELETE FROM public.healthcare_professionals
+        WHERE institution_id = $1 AND professional_id = $2
+        RETURNING professional_id
+        """
+        result = await db.fetchrow(delete_professional_query, institution_id, professional_id)
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Professional not found")
+
+        return result
+
+    except asyncpg.PostgresError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
 
 async def update_healthcare_professional(
