@@ -9,7 +9,7 @@ interface ProfessionalModalProps {
     email: string;
   };
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: () => Promise<void>; // Ensure onSubmit returns a Promise
   onChange: (field: string, value: string) => void;
 }
 
@@ -26,6 +26,8 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
     contact_number: "",
     email: "",
   });
+
+  const [loading, setLoading] = useState(false); // Loading state
 
   const validateForm = () => {
     const newErrors = {
@@ -57,9 +59,16 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
     return isValid;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      onSubmit();
+      setLoading(true); // Set loading to true when submitting
+      try {
+        await onSubmit(); // Wait for the backend response
+      } catch (error) {
+        console.error("Error submitting form:", error);
+      } finally {
+        setLoading(false); // Reset loading state
+      }
     }
   };
 
@@ -105,7 +114,7 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
               onChange={(e) => {
                 const value = e.target.value;
                 if (/^[A-Za-z\s]*$/.test(value)) {
-                  onChange("name", value);
+                  onChange("specialization", value);
                 }
               }}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -124,13 +133,19 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
             </label>
             <input
               type="text"
-              placeholder="Enter the contact number"
-              value={professional.contact_number}
+              placeholder="Enter the contact number starting with 9xxxxxxxx"
+              value={professional.contact_number.replace("+251", "")} // Display only the user's input
               onChange={(e) => {
                 const value = e.target.value;
-                if (/^\d*$/.test(value)) {
-                  // Only allow digits (0-9)
-                  onChange("contact_number", value);
+
+                // Ensure the input starts with 9 and only contains digits
+                if (/^9\d*$/.test(value)) {
+                  // Prepend +251 to the user's input and update the state
+                  const fullNumber = `+251${value}`;
+                  onChange("contact_number", fullNumber);
+                } else if (value === "") {
+                  // Allow empty input (e.g., if the user deletes the number)
+                  onChange("contact_number", "");
                 }
               }}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -165,14 +180,44 @@ const ProfessionalModal: React.FC<ProfessionalModalProps> = ({
           <button
             className="px-20 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
             onClick={onClose}
+            disabled={loading} // Disable cancel button during loading
           >
             Cancel
           </button>
           <button
-            className="px-20 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="px-20 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center"
             onClick={handleSubmit}
+            disabled={loading} // Disable the button during loading
           >
-            {isEdit ? "Save" : "Add"}
+            {loading ? (
+              <div className="flex items-center">
+                <svg
+                  className="animate-spin h-5 w-5 mr-3 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                {isEdit ? "Saving..." : "Adding..."}
+              </div>
+            ) : isEdit ? (
+              "Save"
+            ) : (
+              "Add"
+            )}
           </button>
         </div>
       </div>
